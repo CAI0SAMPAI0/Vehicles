@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'cloudinary',
     'cars',
     'accounts',
+    'openai_api',
 ]
 
 MIDDLEWARE = [

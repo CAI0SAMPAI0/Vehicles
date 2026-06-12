@@ -12,45 +12,10 @@
         href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@400;600;700&display=swap"
         rel="stylesheet">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-black': '#0a0a0b',
-                        'brand-dark': '#111114',
-                        'brand-panel': '#18181c',
-                        'brand-border': '#2a2a30',
-                        'brand-muted': '#3a3a42',
-                        'brand-text-dim': '#6b6b7a',
-                        'brand-text': '#c8c8d4',
-                        'brand-text-hi': '#eeeef5',
-                        'brand-red': '#e52222',
-                        'brand-red-dim': '#7a1010',
-                    },
-                    fontFamily: {
-                        bebas: ['Bebas Neue', 'sans-serif'],
-                        barlow: ['Barlow', 'sans-serif'],
-                        'barlow-cond': ['Barlow Condensed', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-image: repeating-linear-gradient(105deg,
-                    transparent 0px,
-                    transparent 18px,
-                    rgba(255, 255, 255, 0.018) 18px,
-                    rgba(255, 255, 255, 0.018) 19px);
-        }
-    </style>
+    <link rel="stylesheet" href="/src/index.css">
 </head>
 
-<body class="bg-brand-black text-brand-text font-barlow min-h-screen flex flex-col">
+<body>
 
     <!-- NAVBAR -->
     <nav
@@ -59,89 +24,44 @@
             <span class="w-1.5 h-1.5 bg-brand-red rounded-full shadow-[0_0_10px_#e52222]"></span>
             Auto<span class="text-brand-red">Drive</span>
         </a>
-        <ul id="auth-container" class="flex items-center gap-1 font-barlow-cond text-xs font-semibold tracking-widest uppercase list-none">
-            <!-- Simulação de autenticação -->
-            <li class="text-brand-text-dim border-l-2 border-brand-red px-3.5 py-1.5">Olá, Admin!</li>
-            <li class="bg-brand-red text-white px-4 py-1.5 rounded-sm hover:bg-brand-red/80 transition-colors">
-                <a href="../new_car/">Cadastrar</a>
-            </li>
-
-            <li><a href="index.html"
-                    class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Garagem</a>
-            </li>
-            <li><a href="../login/"
-                    class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Sair</a>
-            </li>
+        <ul id="auth-container" class="nav-links">
+            <li class="nav-greeting">Olá, Admin!</li>
+            <li class="nav-btn-red"><a href="../new_car/">+ Cadastrar</a></li>
+            <li><a href="index.html">Garagem</a></li>
+            <li><a href="../login/">Sair</a></li>
         </ul>
     </nav>
 
-    <!-- CONTEÚDO PRINCIPAL -->
-    <main class="flex-1 pb-16">
-        <!-- Faixa de Cabeçalho da Página -->
-        <header class="bg-brand-panel border-b border-brand-border py-10 px-8 relative overflow-hidden">
-            <h1 class="font-bebas text-5xl tracking-wide text-brand-text-hi">Garagem</h1>
-            <p class="font-barlow-cond text-xs tracking-[0.15em] text-brand-text-dim mt-2 uppercase">Explore e gerencie
-                seus automóveis</p>
-        </header>
-
-        <!-- Container do grid de carros -->
-        <div class="max-w-7xl mx-auto px-8 mt-8">
-            <div id="highlight-section" class="flex flex-col md:flex-row gap-8">
-                <!-- Seção Esquerda: Imagem ou Destaque -->
-                <div
-                    class="w-full md:w-1/2 flex items-center justify-center bg-brand-panel border border-brand-border rounded-md p-8 min-h-[300px]">
-                    <span class="text-brand-text-dim font-barlow-cond tracking-widest uppercase">Sem Imagem de
-                        Destaque</span>
-                </div>
-                <!-- Seção Direita: Mensagem e Ação -->
-                <div class="w-full md:w-1/2 flex flex-col justify-center">
-                    <h2 class="text-6xl font-bold font-bebas text-brand-text-hi leading-none mb-4">Encontre seu carro
-                        perfeito</h2>
-                    <p class="text-brand-text-dim text-lg mb-6 max-w-md">Consulte a listagem completa de carros, filtre
-                        por marca e ano, ou adicione um novo carro ao catálogo.</p>
-                    <div>
-                        <a href="index.html"
-                            class="inline-block bg-brand-red text-white font-barlow-cond font-bold tracking-widest text-sm uppercase px-8 py-3 rounded-sm hover:bg-brand-red/90 transition-all shadow-[0_4px_20px_rgba(229,34,34,0.35)]">
-                            Explorar Garagem
-                        </a>
+    <main>
+        <div class="search-strip">
+            <div class="search-inner">
+                <div class="search-label">Encontre seu carro</div>
+                <div style="flex:1; display:flex;">
+                    <div class="search-bar" style="flex:1; max-width:500px;">
+                        <input type="text" id="search-input" placeholder="Modelo, marca...">
+                        <button type="button" id="search-btn">Buscar</button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Filtros e Busca -->
-            <div class="mt-16 bg-brand-panel border border-brand-border rounded-md p-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="w-full md:w-3/4">
-                    <label for="search-input" class="sr-only">Buscar carros</label>
-                    <input type="text" id="search-input" placeholder="Buscar por modelo, marca ou palavra-chave..." 
-                        class="w-full bg-brand-dark border border-brand-border rounded-sm text-brand-text-hi px-4 py-3 focus:outline-none focus:border-brand-red transition-all text-sm">
-                </div>
-                <div class="w-full md:w-1/4">
-                    <label for="brand-filter" class="sr-only">Filtrar por marca</label>
-                    <select id="brand-filter" class="w-full bg-brand-dark border border-brand-border rounded-sm text-brand-text-hi px-4 py-3 focus:outline-none focus:border-brand-red transition-all text-sm">
-                        <option value="" class="bg-brand-panel">Todas as marcas</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Grid de Carros -->
-            <div id="cars-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
-                <!-- Cars will be loaded dynamically here -->
+        <div class="cars-section">
+            <div id="cars-meta" class="cars-meta">0 veículos encontrados</div>
+            <div id="cars-grid" class="car-grid">
+                <!-- Carregado dinamicamente via TypeScript -->
             </div>
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-brand-panel border-t border-brand-border px-8 py-6 flex items-center justify-between">
-        <div class="font-bebas text-lg tracking-widest text-brand-text-dim">
-            Auto<span class="text-brand-red">Drive</span>
-        </div>
-        <p class="font-barlow-cond text-[10px] tracking-widest text-brand-muted uppercase">
-            &copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados
-        </p>
+    <footer>
+        <div class="footer-logo">Auto<span>Drive</span></div>
+        <p>&copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados</p>
     </footer>
 
     <!-- Scripts -->
     <script type="module" src="/src/cars.ts"></script>
+
 
 
 </body>

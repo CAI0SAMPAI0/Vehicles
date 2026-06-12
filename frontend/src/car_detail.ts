@@ -56,25 +56,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderCarDetails(car: CarDetails) {
         const fotoUrl = car.foto ? `${API_BASE_URL}${car.foto}` : '';
         const precoFormatado = car.preco 
-            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(car.preco)
+            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(car.preco)
             : 'Preço sob consulta';
 
         if (photoContainer) {
             if (fotoUrl) {
-                photoContainer.innerHTML = `<img src="${fotoUrl}" alt="${car.modelo}" class="w-full h-full object-contain max-h-[400px]">`;
+                photoContainer.innerHTML = `<img src="${fotoUrl}" alt="${car.modelo}">`;
             } else {
-                photoContainer.innerHTML = `<span class="text-brand-text-dim font-barlow-cond tracking-widest uppercase">Sem Foto Disponível</span>`;
+                photoContainer.innerHTML = `
+                    <div class="no-photo-lg">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <rect x="1" y="6" width="22" height="13" rx="2"/><path d="M5 6l2-3h10l2 3"/><circle cx="7.5" cy="13" r="1.5"/><circle cx="16.5" cy="13" r="1.5"/>
+                        </svg>
+                        <span>Foto não disponível</span>
+                    </div>
+                `;
             }
         }
 
         if (brandTag) brandTag.textContent = car.marca || 'MARCA';
         if (modelTitle) modelTitle.textContent = car.modelo;
         if (valueDisplay) valueDisplay.textContent = precoFormatado;
-        if (bioText) bioText.textContent = car.descricao || 'Nenhuma descrição fornecida para este veículo.';
         
-        if (specFactoryYear) specFactoryYear.textContent = car.ano_fabricacao?.toString() || '-';
-        if (specModelYear) specModelYear.textContent = car.ano_modelo?.toString() || '-';
-        if (specPlate) specPlate.textContent = car.placa || '-';
+        // Exibir bio se houver
+        const bioCard = document.getElementById('car-bio-card');
+        if (bioCard && bioText) {
+            if (car.descricao) {
+                bioText.textContent = car.descricao;
+                bioCard.style.display = 'block';
+            } else {
+                bioCard.style.display = 'none';
+            }
+        }
+        
+        if (specFactoryYear) specFactoryYear.textContent = car.ano_fabricacao?.toString() || '—';
+        if (specModelYear) specModelYear.textContent = car.ano_modelo?.toString() || '—';
+        if (specPlate) specPlate.textContent = car.placa || '—';
+
+        // Mostrar ações apenas se o usuário estiver logado
+        const username = localStorage.getItem('username');
+        const detailActions = document.getElementById('detail-actions');
+        if (detailActions) {
+            if (username) {
+                detailActions.style.display = 'flex';
+            } else {
+                detailActions.style.display = 'none';
+            }
+        }
 
         // Configurar Ações
         if (btnEdit) {

@@ -9,126 +9,82 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-black': '#0a0a0b',
-              'brand-dark': '#111114',
-              'brand-panel': '#18181c',
-              'brand-border': '#2a2a30',
-              'brand-muted': '#3a3a42',
-              'brand-text-dim': '#6b6b7a',
-              'brand-text': '#c8c8d4',
-              'brand-text-hi': '#eeeef5',
-              'brand-red': '#e52222',
-              'brand-red-dim': '#7a1010',
-            },
-            fontFamily: {
-              bebas: ['Bebas Neue', 'sans-serif'],
-              barlow: ['Barlow', 'sans-serif'],
-              'barlow-cond': ['Barlow Condensed', 'sans-serif'],
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-      body {
-        background-image: repeating-linear-gradient(
-          105deg,
-          transparent 0px,
-          transparent 18px,
-          rgba(255, 255, 255, 0.018) 18px,
-          rgba(255, 255, 255, 0.018) 19px
-        );
-      }
-    </style>
+    <link rel="stylesheet" href="/src/index.css">
 </head>
 
-<body class="bg-brand-black text-brand-text font-barlow min-h-screen flex flex-col justify-between">
+<body>
 
     <!-- NAVBAR -->
-    <nav class="sticky top-0 z-50 bg-brand-black/90 backdrop-blur-md border-b border-brand-border h-16 px-8 flex items-center justify-between">
-        <a href="../" class="font-bebas text-3xl tracking-widest text-brand-text-hi flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-brand-red rounded-full shadow-[0_0_10px_#e52222]"></span>
-            Auto<span class="text-brand-red">Drive</span>
-        </a>
-        <ul class="flex items-center gap-1 font-barlow-cond text-xs font-semibold tracking-widest uppercase list-none">
-            <li><a href="../" class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Garagem</a></li>
-            <li><a href="../login/" class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Sair</a></li>
+    <nav>
+        <a href="../cars/" class="nav-logo">Auto<span>Drive</span></a>
+        <ul class="nav-links">
+            <li><a href="../cars/">Garagem</a></li>
+            <li><a href="../login/">Sair</a></li>
         </ul>
     </nav>
 
     <!-- CONTENT -->
-    <main class="flex-1 py-12 px-4 max-w-5xl mx-auto w-full">
-        <div class="flex flex-col lg:flex-row gap-8 bg-brand-panel border border-brand-border rounded-md p-8">
-            <!-- Left Side: Image -->
-            <div class="w-full lg:w-1/2 flex items-center justify-center bg-brand-dark border border-brand-border rounded-sm p-4 min-h-[350px]">
-                <div id="car-photo-container" class="text-brand-text-dim font-barlow-cond tracking-widest uppercase">
-                    Sem Foto Disponível
+    <main>
+        <a href="../cars/" class="back-link">
+            ← Voltar à garagem
+        </a>
+        
+        <div class="detail-wrapper anim-fadeup">
+            <!-- Left Side: Photo -->
+            <div id="car-photo-container" class="detail-photo">
+                <div class="no-photo-lg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <rect x="1" y="6" width="22" height="13" rx="2"/><path d="M5 6l2-3h10l2 3"/><circle cx="7.5" cy="13" r="1.5"/><circle cx="16.5" cy="13" r="1.5"/>
+                    </svg>
+                    <span>Foto não disponível</span>
                 </div>
             </div>
             
-            <!-- Right Side: Details / Form -->
-            <div class="w-full lg:w-1/2 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <span id="car-brand-tag" class="inline-block bg-brand-red-dim/30 border border-brand-red text-brand-red font-barlow-cond text-xs font-bold tracking-widest uppercase px-3 py-1 rounded-sm mb-2">MARCA</span>
-                            <h2 id="car-model-title" class="font-bebas text-5xl tracking-wide text-brand-text-hi leading-none">Modelo do Carro</h2>
-                        </div>
-                        <div id="car-value-display" class="font-bebas text-3xl text-brand-red tracking-wide">R$ 0,00</div>
+            <!-- Right Side: Panel -->
+            <div class="detail-panel">
+                <div class="detail-header">
+                    <div id="car-brand-tag" class="detail-brand">MARCA</div>
+                    <div id="car-model-title" class="detail-model">Modelo do Carro</div>
+                    <div id="car-value-display" class="detail-price">R$ 0,00</div>
+                </div>
+                
+                <div class="specs-card">
+                    <div class="specs-title">Especificações</div>
+                    <div class="spec-row">
+                        <span class="spec-label">Ano de Fabricação</span>
+                        <span id="spec-factory-year" class="spec-value">-</span>
                     </div>
-                    
-                    <p id="car-bio" class="text-brand-text-dim text-sm mb-6 pb-6 border-b border-brand-border">
-                        Nenhuma descrição fornecida para este veículo.
-                    </p>
-                    
-                    <!-- Specifications -->
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-                        <div>
-                            <span class="block font-barlow-cond text-[10px] tracking-widest text-brand-text-dim uppercase">Ano Fabricação</span>
-                            <span id="spec-factory-year" class="text-brand-text-hi font-semibold text-sm">-</span>
-                        </div>
-                        <div>
-                            <span class="block font-barlow-cond text-[10px] tracking-widest text-brand-text-dim uppercase">Ano Modelo</span>
-                            <span id="spec-model-year" class="text-brand-text-hi font-semibold text-sm">-</span>
-                        </div>
-                        <div>
-                            <span class="block font-barlow-cond text-[10px] tracking-widest text-brand-text-dim uppercase">Placa</span>
-                            <span id="spec-plate" class="text-brand-text-hi font-semibold text-sm">-</span>
-                        </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Ano do Modelo</span>
+                        <span id="spec-model-year" class="spec-value">-</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Placa</span>
+                        <span id="spec-plate" class="spec-value">-</span>
                     </div>
                 </div>
-
-                <!-- Actions -->
-                <div class="flex gap-4 pt-6 border-t border-brand-border">
-                    <button id="btn-edit" class="flex-1 bg-brand-red text-white font-barlow-cond font-bold tracking-widest text-sm uppercase py-3 rounded-sm hover:bg-brand-red/90 transition-all">
-                        Editar
-                    </button>
-                    <button id="btn-delete" class="flex-1 border border-brand-red text-brand-red font-barlow-cond font-bold tracking-widest text-sm uppercase py-3 rounded-sm hover:bg-brand-red hover:text-white transition-all">
-                        Excluir
-                    </button>
+                
+                <div id="car-bio-card" class="bio-card" style="display: none;">
+                    <div class="bio-title">Descrição</div>
+                    <p id="car-bio" class="bio-text"></p>
+                </div>
+                
+                <div class="detail-actions" id="detail-actions" style="display: none;">
+                    <button id="btn-edit" class="btn btn-primary">Editar veículo</button>
+                    <button id="btn-delete" class="btn btn-danger">Remover</button>
                 </div>
             </div>
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-brand-panel border-t border-brand-border px-8 py-6 flex items-center justify-between">
-        <div class="font-bebas text-lg tracking-widest text-brand-text-dim">
-            Auto<span class="text-brand-red">Drive</span>
-        </div>
-        <p class="font-barlow-cond text-[10px] tracking-widest text-brand-muted uppercase">
-            &copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados
-        </p>
+    <footer>
+        <div class="footer-logo">Auto<span>Drive</span></div>
+        <p>&copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados</p>
     </footer>
 
     <!-- Scripts -->
     <script type="module" src="/src/car_detail.ts"></script>
+
 </body>
 </html>

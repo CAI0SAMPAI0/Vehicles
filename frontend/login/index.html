@@ -9,77 +9,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-black': '#0a0a0b',
-              'brand-dark': '#111114',
-              'brand-panel': '#18181c',
-              'brand-border': '#2a2a30',
-              'brand-muted': '#3a3a42',
-              'brand-text-dim': '#6b6b7a',
-              'brand-text': '#c8c8d4',
-              'brand-text-hi': '#eeeef5',
-              'brand-red': '#e52222',
-              'brand-red-dim': '#7a1010',
-            },
-            fontFamily: {
-              bebas: ['Bebas Neue', 'sans-serif'],
-              barlow: ['Barlow', 'sans-serif'],
-              'barlow-cond': ['Barlow Condensed', 'sans-serif'],
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-      body {
-        background-image: repeating-linear-gradient(
-          105deg,
-          transparent 0px,
-          transparent 18px,
-          rgba(255, 255, 255, 0.018) 18px,
-          rgba(255, 255, 255, 0.018) 19px
-        );
-      }
-    </style>
+    <link rel="stylesheet" href="/src/index.css">
 </head>
 
-<body class="bg-brand-black text-brand-text font-barlow min-h-screen flex flex-col justify-between">
+<body>
 
     <!-- NAVBAR -->
-    <nav class="sticky top-0 z-50 bg-brand-black/90 backdrop-blur-md border-b border-brand-border h-16 px-8 flex items-center justify-between">
-        <a href="../" class="font-bebas text-3xl tracking-widest text-brand-text-hi flex items-center gap-2">
-            <span class="w-1.5 h-1.5 bg-brand-red rounded-full shadow-[0_0_10px_#e52222]"></span>
-            Auto<span class="text-brand-red">Drive</span>
-        </a>
-        <ul class="flex items-center gap-1 font-barlow-cond text-xs font-semibold tracking-widest uppercase list-none">
-            <li><a href="../" class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Garagem</a></li>
-            <li><a href="../register/" class="text-brand-text-dim hover:text-brand-text-hi hover:bg-brand-panel px-3.5 py-1.5 rounded-sm transition-all">Cadastre-se</a></li>
+    <nav>
+        <a href="../cars/" class="nav-logo">Auto<span>Drive</span></a>
+        <ul class="nav-links">
+            <li><a href="../cars/">Garagem</a></li>
+            <li><a href="../register/">Cadastre-se</a></li>
         </ul>
     </nav>
 
     <!-- FORM CARD -->
-    <main class="flex-1 flex items-center justify-center py-12 px-4">
-        <div class="w-full max-w-md bg-brand-panel border border-brand-border rounded-md p-10">
-            <h2 class="font-bebas text-3xl tracking-wider text-brand-text-hi mb-1">Entrar</h2>
-            <p class="font-barlow-cond text-xs tracking-[0.15em] text-brand-text-dim uppercase pb-6 border-b border-brand-border mb-6">Acesse sua conta para gerenciar carros</p>
+    <main style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 128px); padding: 2rem 1rem;">
+        <div class="form-card" style="margin: 0; width: 100%;">
+            <h2>Entrar</h2>
+            <p class="form-subtitle">Acesse sua conta para gerenciar carros</p>
             
-            <form id="login-form" class="space-y-6">
-                <div>
-                    <label for="username" class="block font-barlow-cond text-xs font-semibold tracking-widest uppercase text-brand-text-dim mb-2">Usuário</label>
-                    <input type="text" id="username" name="username" required class="w-full bg-brand-dark border border-brand-border rounded-sm text-brand-text-hi px-4 py-3 focus:outline-none focus:border-brand-red transition-all">
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" name="username" required>
                 </div>
-                <div class="relative">
-                    <label for="password" class="block font-barlow-cond text-xs font-semibold tracking-widest uppercase text-brand-text-dim mb-2">Senha</label>
-                    <div class="relative">
-                        <input type="password" id="password" name="password" required class="w-full bg-brand-dark border border-brand-border rounded-sm text-brand-text-hi pl-4 pr-12 py-3 focus:outline-none focus:border-brand-red transition-all">
-                        <button type="button" id="toggle-password" class="absolute right-4 top-1/2 -translate-y-1/2 text-brand-text-dim hover:text-brand-text-hi focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                <div class="form-group" style="position: relative;">
+                    <label for="password">Senha</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="password" required style="padding-right: 3rem;">
+                        <button type="button" id="toggle-password" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; color: var(--text-dim);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px;">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                             </svg>
@@ -87,25 +47,21 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="w-full bg-brand-red text-white font-barlow-cond font-bold tracking-widest text-sm uppercase py-3 rounded-sm hover:bg-brand-red/90 transition-all shadow-[0_4px_20px_rgba(229,34,34,0.25)]">
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
                     Entrar
                 </button>
             </form>
             
-            <p class="text-xs text-brand-text-dim text-center mt-6">
-                Não tem uma conta? <a href="../register/" class="text-brand-red hover:underline">Cadastre-se</a>
+            <p style="font-size: 0.8rem; color: var(--text-dim); text-align: center; margin-top: 1.5rem;">
+                Não tem uma conta? <a href="../register/" style="color: var(--red); text-decoration: none;">Cadastre-se</a>
             </p>
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-brand-panel border-t border-brand-border px-8 py-6 flex items-center justify-between">
-        <div class="font-bebas text-lg tracking-widest text-brand-text-dim">
-            Auto<span class="text-brand-red">Drive</span>
-        </div>
-        <p class="font-barlow-cond text-[10px] tracking-widest text-brand-muted uppercase">
-            &copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados
-        </p>
+    <footer>
+        <div class="footer-logo">Auto<span>Drive</span></div>
+        <p>&copy; 2026 Caio Sampaio &mdash; Todos os direitos reservados</p>
     </footer>
 
     <!-- Scripts -->

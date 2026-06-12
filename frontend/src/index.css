@@ -356,6 +356,14 @@ footer p {
   pointer-events: none;
   user-select: none;
   line-height: 1;
+  display: none;
+  z-index: 1;
+}
+
+@media (min-width: 1100px) {
+  .search-strip::before {
+    display: block;
+  }
 }
 
 .search-inner {

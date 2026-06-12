@@ -24,60 +24,61 @@
     </nav>
 
     <!-- CONTENT -->
-    <main>
-        <div class="edit-wrapper anim-fadeup">
-            <div class="edit-header">
-                <h1 id="page-title">Cadastrar Veículo</h1>
-                <p id="page-subtitle">Adicione um novo carro ao inventário</p>
-            </div>
+    <main style="padding: 2rem 1rem; display: flex; justify-content: center; align-items: center;">
+        <div class="form-card" style="max-width: 700px; width: 100%; margin: 2rem auto;">
+            <h2 id="page-title">Cadastrar Veículo</h2>
+            <p id="page-subtitle" class="form-subtitle">Adicione um novo carro ao inventário</p>
             
-            <div class="edit-form">
-                <form id="car-form" enctype="multipart/form-data">
-                    <table class="django-form">
-                        <tr>
-                            <th><label for="model">Modelo</label></th>
-                            <td><input type="text" id="model" name="model" required placeholder="Ex: Civic"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="brand">Marca</label></th>
-                            <td>
-                                <select id="brand" name="brand" required>
-                                    <option value="" class="bg-brand-panel">Selecione uma marca</option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th><label for="factory_year">Ano de Fabricação</label></th>
-                            <td><input type="number" id="factory_year" name="factory_year" placeholder="Ex: 2020"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="model_year">Ano do Modelo</label></th>
-                            <td><input type="number" id="model_year" name="model_year" placeholder="Ex: 2021"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="plate">Placa</label></th>
-                            <td><input type="text" id="plate" name="plate" placeholder="Ex: ABC-1234"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="value">Valor (R$)</label></th>
-                            <td><input type="number" step="0.01" id="value" name="value" placeholder="Ex: 85000"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="photo">Foto</label></th>
-                            <td><input type="file" id="photo" name="photo" accept="image/*"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="bio">Descrição / Bio</label></th>
-                            <td><textarea id="bio" name="bio" placeholder="Descreva os detalhes do automóvel..."></textarea></td>
-                        </tr>
-                    </table>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="btn-save-car">Salvar Alterações</button>
-                        <a href="../cars/" class="btn btn-ghost">Cancelar</a>
+            <form id="car-form" enctype="multipart/form-data">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="model">Modelo</label>
+                        <input type="text" id="model" name="model" required placeholder="Ex: Civic">
                     </div>
-                </form>
-            </div>
+                    <div class="form-group">
+                        <label for="brand">Marca</label>
+                        <select id="brand" name="brand" required>
+                            <option value="" class="bg-brand-panel">Selecione uma marca</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="factory_year">Ano de Fabricação</label>
+                        <input type="number" id="factory_year" name="factory_year" placeholder="Ex: 2020">
+                    </div>
+                    <div class="form-group">
+                        <label for="model_year">Ano do Modelo</label>
+                        <input type="number" id="model_year" name="model_year" placeholder="Ex: 2021">
+                    </div>
+                    <div class="form-group">
+                        <label for="plate">Placa</label>
+                        <input type="text" id="plate" name="plate" placeholder="Ex: ABC-1234">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label for="value">Valor (R$)</label>
+                        <input type="number" step="0.01" id="value" name="value" placeholder="Ex: 85000">
+                    </div>
+                    <div class="form-group">
+                        <label for="photo">Foto</label>
+                        <input type="file" id="photo" name="photo" accept="image/*" style="padding: 0.5rem 1rem;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="bio">Descrição / Bio</label>
+                    <textarea id="bio" name="bio" placeholder="Descreva os detalhes do automóvel..."></textarea>
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 1rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary" id="btn-save-car" style="flex: 1; justify-content: center;">Salvar Alterações</button>
+                    <a href="../cars/" class="btn btn-ghost" style="flex: 1; justify-content: center; text-align: center;">Cancelar</a>
+                </div>
+            </form>
         </div>
     </main>
 

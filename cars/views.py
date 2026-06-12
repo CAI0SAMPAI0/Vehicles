@@ -54,5 +54,7 @@ def cars_api_list(request):
             'modelo': car.model,
             'ano': car.model_year,
             'preco': car.value,
+            'foto': car.photo.url if car.photo else None,
+            'descricao': car.bio,
         })
     return JsonResponse(data, safe=False)

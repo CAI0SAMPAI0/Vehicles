@@ -39,4 +39,7 @@ class CarInventory(models.Model):
 
 @receiver([post_save, post_delete], sender=Car)
 def clear_cache_before_change(sender, instance, **kwargs):
-    cache.clear()
+    try:
+        cache.clear()
+    except Exception as e:
+        print(f"Aviso: Não foi possível limpar o cache (Redis): {e}")

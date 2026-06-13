@@ -90,7 +90,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const selectedBrand = brandFilter?.value || '';
         
         try {
-            const url = `/api/v1/cars/?page=${currentPage}&search=${encodeURIComponent(query)}&brand=${encodeURIComponent(selectedBrand)}`;
+            let url = `/api/v1/cars/?page=${currentPage}`;
+            
+            if (query) {
+                url += `&search=${encodeURIComponent(query)}`;
+            }
+            if (selectedBrand) {
+                url += `&brand=${encodeURIComponent(selectedBrand)}`;
+            }
+            
             const response = await apiFetch<{ results: Car[], count: number, has_next: boolean }>(url);
             
             if (response) {

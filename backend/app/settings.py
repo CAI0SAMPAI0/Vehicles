@@ -114,6 +114,9 @@ if redis_url:
             "LOCATION": redis_url,
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "REDIS_CLIENT_KWARGS": {
+                    "protocol": 2,
+                },
             }
         }
     }

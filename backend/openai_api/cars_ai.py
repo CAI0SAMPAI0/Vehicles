@@ -33,6 +33,68 @@ if not GROQ_API_KEY:
 
 client = Groq(api_key=GROQ_API_KEY)
 
+def get_car_image_url(make, model, year):
+    """
+    Busca a imagem principal de um artigo da Wikipedia para o carro.
+    """
+    query = f"{make} {model}"
+    headers = {"User-Agent": "CarrosBot/1.0 (seu-email@exemplo.com)"}
+    
+    # Tenta em português e depois em inglês
+    for lang in ["pt", "en"]:
+        search_url = f"https://{lang}.wikipedia.org/w/api.php"
+        search_params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": query,
+            "format": "json",
+            "srlimit": 1
+        }
+        
+        try:
+            res = requests.get(search_url, params=search_params, headers=headers, timeout=10).json()
+            search_results = res.get("query", {}).get("search", [])
+            if search_results:
+                title = search_results[0]["title"]
+                
+                img_params = {
+                    "action": "query",
+                    "titles": title,
+                    "prop": "pageimages",
+                    "format": "json",
+                    "pithumbsize": 1000
+                }
+                img_res = requests.get(search_url, params=img_params, headers=headers, timeout=10).json()
+                pages = img_res.get("query", {}).get("pages", {})
+                for page_id in pages:
+                    if "thumbnail" in pages[page_id]:
+                        return pages[page_id]["thumbnail"]["source"]
+        except Exception:
+            continue
+    return None
+
+def download_and_save_image(car_obj, image_url):
+    """
+    Baixa a imagem da URL e salva no campo photo do modelo Car.
+    O Django Cloudinary Storage cuidará do upload para o Cloudinary automaticamente.
+    """
+    if not image_url:
+        return False
+        
+    try:
+        print(f"   [Imagem] Baixando: {image_url}", flush=True)
+        response = requests.get(image_url, timeout=15)
+        if response.status_code == 200:
+            file_name = f"{car_obj.brand.name}_{car_obj.model}_{car_obj.model_year or 'unknown'}.jpg".replace(" ", "_").lower()
+            car_obj.photo.save(file_name, ContentFile(response.content), save=True)
+            print(f"   [Sucesso] Imagem salva para {car_obj.model}", flush=True)
+            return True
+        else:
+            print(f"   [Erro] Falha ao baixar imagem (Status: {response.status_code})", flush=True)
+    except Exception as e:
+        print(f"   [Erro] Exceção ao salvar imagem: {e}", flush=True)
+    return False
+
 def get_car_models_from_ai(brand_name, num_cars=5):
     """
     Usa a IA da Groq para gerar modelos populares de uma marca
@@ -154,8 +216,17 @@ def main():
                 
                 if car_created:
                     print(f"   [Adicionado] {brand_name} {model_name} - R$ {car_obj.value} ({car_obj.model_year})", flush=True)
+                    # Busca e salva a imagem do carro
+                    image_url = get_car_image_url(brand_name, model_name, car_obj.model_year or 2023)
+                    download_and_save_image(car_obj, image_url)
                 else:
-                    print(f"   [Ignorado] {brand_name} {model_name} (Já existente)", flush=True)
+                    # Se o carro já existe mas não tem foto, tenta baixar uma
+                    if not car_obj.photo:
+                        print(f"   [Atualizando] {brand_name} {model_name} (Sem foto)", flush=True)
+                        image_url = get_car_image_url(brand_name, model_name, car_obj.model_year or 2023)
+                        download_and_save_image(car_obj, image_url)
+                    else:
+                        print(f"   [Ignorado] {brand_name} {model_name} (Já existente com foto)", flush=True)
 
 if __name__ == '__main__':
     main()

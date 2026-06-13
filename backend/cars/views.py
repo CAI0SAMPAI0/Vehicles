@@ -197,5 +197,7 @@ def car_detail_api(request, pk):
     elif request.method == 'DELETE':
         car.delete()
         return JsonResponse({'success': True})
+        
+    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
 

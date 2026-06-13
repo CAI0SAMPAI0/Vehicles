@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 const response = await fetch(url, {
-                    method: isEditMode ? 'PATCH' : 'POST',
+                    method: 'POST',
                     headers,
                     body: formData
                 });

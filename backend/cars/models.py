@@ -1,4 +1,8 @@
 from django.db import models
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
+
 
 class Brand(models.Model):
     id = models.AutoField(primary_key=True)
@@ -31,3 +35,8 @@ class CarInventory(models.Model):
 
     def __str__(self) -> str:
         return f'{self.cars_count} - {self.cars_value}'
+
+
+@receiver([post_save, post_delete], sender=Car)
+def clear_cache_before_change(sender, instance, **kwargs):
+    cache.clear()

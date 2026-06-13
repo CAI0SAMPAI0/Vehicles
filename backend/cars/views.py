@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, UpdateView, DeleteView, DetailView, CreateView
 from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
 
 
 
@@ -22,7 +23,7 @@ class CarsListView(ListView):
             cars = cars.filter(model__icontains=search)
         return cars
     
-# protegendo view fazendo autenticação
+
 @method_decorator(login_required(login_url='login'), name='dispatch')
 class NewCarCreateView(CreateView):
     model = Car
@@ -30,9 +31,12 @@ class NewCarCreateView(CreateView):
     template_name = 'new_car.html'
     success_url = '/cars/'
 
+
 class CarDetailView(DetailView):
     model = Car
     template_name = 'car_detail.html'
+
+
 class CarUpdateView(UpdateView):
     model = Car
     form_class = CarModelForm
@@ -41,15 +45,29 @@ class CarUpdateView(UpdateView):
     def get_success_url(self):
         return reverse_lazy('car_detail', kwargs={'pk': self.object.pk})
 
+
 class CarDeleteView(DeleteView):
     model = Car
     template_name = 'car_delete.html'
     success_url = '/cars/'
 
 def cars_api_list(request):
+    search = request.GET.get('search', '')
+    brand = request.GET.get('brand', '')
+    page = request.GET.get('page', '1')
+    
+    try:
+        page = int(page)
+    except ValueError:
+        page = 1
+
+    cache_key = f'cars_api_list_{search}_{brand}_{page}'
+    cached_cars = cache.get(cache_key)
+    if cached_cars:
+        return JsonResponse(cached_cars)
+
     cars = Car.objects.select_related('brand').all().order_by('model')
     
-    # 1. Filtro por busca (modelo, marca ou descrição)
     search = request.GET.get('search')
     if search:
         from django.db.models import Q
@@ -58,15 +76,12 @@ def cars_api_list(request):
             Q(brand__name__icontains=search) | 
             Q(bio__icontains=search)
         )
-        
-    # 2. Filtro por marca
     brand = request.GET.get('brand')
     if brand:
         cars = cars.filter(brand__name=brand)
         
     total_count = cars.count()
     
-    # 3. Paginação
     page = request.GET.get('page', 1)
     try:
         page = int(page)
@@ -76,7 +91,6 @@ def cars_api_list(request):
     page_size = 15
     start = (page - 1) * page_size
     end = start + page_size
-    
     cars_page = cars[start:end]
     
     data = []
@@ -88,7 +102,6 @@ def cars_api_list(request):
         if car.photo:
             photo_path = str(car.photo)
             if photo_path:
-                # Se estiver usando Cloudinary, gera a URL localmente sem fazer requisições lentas de rede
                 if cloud_name and not photo_path.startswith('http'):
                     foto_url = f"https://res.cloudinary.com/{cloud_name}/image/upload/{photo_path}"
                 else:
@@ -112,6 +125,9 @@ def cars_api_list(request):
         'count': total_count,
         'has_next': end < total_count
     })
+
+    cache.set(cache_key, data, 60 * 60 * 24)
+    return JsonResponse(data)
 
 def brands_api_list(request):
     from cars.models import Brand

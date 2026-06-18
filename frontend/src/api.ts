@@ -30,8 +30,12 @@ export async function apiFetch<T = any>(endpoint: string, options: RequestInit =
         }
         
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || errorData.error || 'Erro na requisição');
+            const contentType = response.headers.get('content-type') || '';
+            let errorData: any = {};
+            if (contentType.includes('application/json')) {
+                errorData = await response.json().catch(() => ({}));
+            }
+            throw new Error(errorData.detail || errorData.error || `Erro ${response.status}`);
         }
         
         if (response.status === 204) {

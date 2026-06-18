@@ -44,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data && data.success) {
                     localStorage.setItem('username', data.username);
+                    if (data.token) {
+                        localStorage.setItem('auth_token', data.token);
+                    }
                     showToast(data.message || 'Login realizado com sucesso!', 'success');
                     setTimeout(() => {
                         window.location.href = '../cars/';

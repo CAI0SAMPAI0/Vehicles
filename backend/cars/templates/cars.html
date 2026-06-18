@@ -289,7 +289,7 @@
     <div class="cars-meta">{{ cars|length }} veículo{{ cars|length|pluralize }} encontrado{{ cars|length|pluralize }}</div>
     <div class="car-grid">
       {% for car in cars %}
-        <a href="{% url 'car_detail' car.pk %}" class="car-link anim-fadeup" style="animation-delay: {{ forloop.counter0 }}00ms">
+        <a href="{% url 'car_detail' car.pk %}" class="car-link anim-fadeup" style="animation-delay: '{{ forloop.counter0 }}00ms'">
           <div class="car-img">
             <span class="car-index">{{ forloop.counter|stringformat:"02d" }}</span>
             {% if car.photo %}

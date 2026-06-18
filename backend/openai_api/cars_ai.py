@@ -187,12 +187,14 @@ def main():
         return
 
     print("Iniciando importação de carros com IA...", flush=True)
-    
-    existing_hashes = get_existing_photo_hashes()
+
+    # Hashes são calculados de forma lazy (um carro por vez) para não carregar
+    # todos os arquivos de imagem em memória de uma vez.
+    existing_hashes: set = set()
     processed_count = 0
     with open(csv_file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
-        
+
         for row in reader:
             if not row:
                 continue
@@ -232,11 +234,14 @@ def main():
                 
                 if car_created:
                     print(f"   [Adicionado] {brand_name} {model_name} - R$ {car_obj.value} ({car_obj.model_year})", flush=True)
-                    # Busca e salva a imagem do carro
+                    # Busca e salva a imagem do carro (hash calculado na hora — lazy)
                     url_and_content = get_car_image_data(brand_name, model_name, car_obj.model_year or 2023, existing_hashes)
                     if url_and_content[1]:
                         download_and_save_image(car_obj, url_and_content)
                         existing_hashes.add(hashlib.md5(url_and_content[1]).hexdigest())
+                    # Libera referência ao conteúdo da imagem da memória imediatamente
+                    url_and_content = (None, None)
+                    time.sleep(1)  # Respeita rate limit da Groq/Wikimedia
                 else:
                     # Se o carro já existe mas não tem foto, tenta baixar uma
                     if not car_obj.photo:
@@ -245,6 +250,7 @@ def main():
                         if url_and_content[1]:
                             download_and_save_image(car_obj, url_and_content)
                             existing_hashes.add(hashlib.md5(url_and_content[1]).hexdigest())
+                        url_and_content = (None, None)
                     else:
                         print(f"   [Ignorado] {brand_name} {model_name} (Já existente com foto)", flush=True)
 

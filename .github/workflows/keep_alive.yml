@@ -1,0 +1,25 @@
+name: Keep-alive Render Backend
+
+# Faz ping no backend da Render a cada 14 minutos para evitar o spin-down do plano free.
+# O plano free hiberna após 15 minutos sem requisições.
+on:
+  schedule:
+    # Executa a cada 14 minutos (5 vezes por hora)
+    - cron: '*/14 * * * *'
+  workflow_dispatch: # Permite disparo manual pelo GitHub UI
+
+jobs:
+  ping:
+    name: Ping Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health/
+        run: |
+          echo "Fazendo ping no backend para manter ativo..."
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 30 "${{ secrets.RENDER_BACKEND_URL }}/health/")
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::warning::Backend respondeu com status $STATUS"
+          else
+            echo "Backend está ativo e saudável!"
+          fi

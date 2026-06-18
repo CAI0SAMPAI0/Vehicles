@@ -2,12 +2,9 @@ import os
 import sys
 from dotenv import load_dotenv
 
-# 1. Carregar variáveis de ambiente
 backend_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 dotenv_path = os.path.join(backend_path, '.env')
 load_dotenv(dotenv_path)
-
-# 2. Configurar Django
 if backend_path not in sys.path:
     sys.path.append(backend_path)
 
@@ -15,7 +12,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 import django
 django.setup()
 
-# Agora podemos importar os modelos do Django com segurança
 from cars.models import Car
 from django.conf import settings
 

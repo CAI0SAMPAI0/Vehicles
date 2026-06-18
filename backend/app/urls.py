@@ -8,10 +8,12 @@ from cars.views import (
     car_create_api, car_detail_api, serve_media_view,
 )
 from accounts.views import register_view, login_view, logout_view
+from app.health import health_view
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('health/', health_view, name='health'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),

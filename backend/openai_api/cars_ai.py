@@ -34,7 +34,7 @@ if not GROQ_API_KEY:
 client = Groq(api_key=GROQ_API_KEY)
 
 import hashlib
-from cars.utils import get_existing_photo_hashes
+from cars.utils import get_existing_photo_hashes, PHOTO_BLACKLIST, _is_valid_car_image
 
 def get_car_image_data(make, model, year, existing_hashes):
     """
@@ -63,24 +63,38 @@ def get_car_image_data(make, model, year, existing_hashes):
         pages_list.sort(key=lambda x: x.get("index", 999))
         
         for page_data in pages_list:
-            title = page_data.get("title", "").lower()
-            if "imageinfo" in page_data:
-                image_info = page_data["imageinfo"][0]
-                url = image_info.get("thumburl") or image_info.get("url")
-                
-                # Ignorar imagens que parecem ser logos ou emblemas
-                if "logo" not in url.lower() and "emblem" not in url.lower() and "logo" not in title and "emblem" not in title and "badge" not in title:
-                    try:
-                        img_res = requests.get(url, headers=headers, timeout=15)
-                        if img_res.status_code == 200:
-                            content = img_res.content
-                            img_hash = hashlib.md5(content).hexdigest()
-                            if img_hash not in existing_hashes:
-                                return url, content
-                            else:
-                                print(f"   [Duplicada Ignorada] Hash {img_hash} já existente para outro carro. Skipping: {url}", flush=True)
-                    except Exception:
-                        pass
+            title = page_data.get("title", "")
+            if "imageinfo" not in page_data:
+                continue
+            image_info = page_data["imageinfo"][0]
+            url = image_info.get("thumburl") or image_info.get("url", "")
+            url_lower = url.lower()
+
+            # Aceita apenas formatos fotográficos
+            if not any(url_lower.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                continue
+
+            # Aplica blacklist centralizada (documentos, logos, mapas, etc.)
+            if any(term in url_lower or term in title.lower() for term in PHOTO_BLACKLIST):
+                continue
+
+            try:
+                img_res = requests.get(url, headers=headers, timeout=15)
+                if img_res.status_code == 200:
+                    content = img_res.content
+
+                    # Rejeita imagens com aspecto de documento/portrait
+                    if not _is_valid_car_image(content):
+                        print(f"   [Aspecto Inválido] Rejeitado: {url}", flush=True)
+                        continue
+
+                    img_hash = hashlib.md5(content).hexdigest()
+                    if img_hash not in existing_hashes:
+                        return url, content
+                    else:
+                        print(f"   [Duplicada Ignorada] Hash {img_hash} já existente. Skipping: {url}", flush=True)
+            except Exception:
+                pass
     except Exception as e:
         print(f"   [Erro API Commons] {e}", flush=True)
         

@@ -52,6 +52,7 @@ if (typeof document !== 'undefined') {
             logo.addEventListener('click', () => {
                 sessionStorage.removeItem('last_search_query');
                 sessionStorage.removeItem('last_selected_brand');
+                sessionStorage.removeItem('last_selected_category');
             });
         });
     });

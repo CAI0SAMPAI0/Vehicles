@@ -426,6 +426,61 @@ footer p {
 
 .search-bar button:hover { background: #c01a1a; }
 
+/* ── SELECTS DE FILTRO (Marca e Categoria) ── */
+.filter-select {
+  height: 44px;
+  background: var(--dark);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 0 0.9rem;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 140px;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--red);
+}
+
+.filter-select option {
+  background: var(--panel);
+  color: var(--text);
+  text-transform: none;
+  font-size: 0.85rem;
+}
+
+/* ── BADGE DE CATEGORIA NO CARD ── */
+.car-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.car-category-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+
+
 /* ── GRID ── */
 .cars-section {
   max-width: 1200px;

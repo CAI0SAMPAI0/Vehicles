@@ -155,7 +155,7 @@ async def get_real_car_price_from_ai(brand, model, year):
     return None
 
 import hashlib
-from cars.utils import get_existing_photo_hashes
+from cars.utils import get_existing_photo_hashes, PHOTO_BLACKLIST, _is_valid_car_image
 
 async def get_car_image_url(http_client, make, model, year, existing_hashes):
     """
@@ -205,26 +205,38 @@ async def get_car_image_url(http_client, make, model, year, existing_hashes):
                     pages_list.sort(key=lambda x: x.get("index", 999))
                     
                     for page_data in pages_list:
-                        title = page_data.get("title", "").lower()
-                        if "imageinfo" in page_data:
-                            image_info = page_data["imageinfo"][0]
-                            url = image_info.get("thumburl") or image_info.get("url")
-                            
-                            url_lower = url.lower()
-                            if any(url_lower.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp']):
-                                if not any(x in url_lower or x in title for x in ["logo", "emblem", "badge", "drawing", "diagram", "interior", "sign"]):
-                                    # Baixa a imagem para checar hash MD5
-                                    try:
-                                        img_res = await http_client.get(url, headers=headers, timeout=15, follow_redirects=True)
-                                        if img_res.status_code == 200:
-                                            img_content = img_res.content
-                                            img_hash = hashlib.md5(img_content).hexdigest()
-                                            if img_hash not in existing_hashes:
-                                                return url, img_content
-                                            else:
-                                                print(f"   [Duplicada Ignorada] Hash {img_hash} já existente para outro carro. Skipping: {url}")
-                                    except Exception:
-                                        pass
+                        title = page_data.get("title", "")
+                        if "imageinfo" not in page_data:
+                            continue
+                        image_info = page_data["imageinfo"][0]
+                        url = image_info.get("thumburl") or image_info.get("url", "")
+                        url_lower = url.lower()
+
+                        if not any(url_lower.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp']):
+                            continue
+
+                        # Aplica blacklist centralizada (documentos, logos, mapas, etc.)
+                        if any(term in url_lower or term in title.lower() for term in PHOTO_BLACKLIST):
+                            continue
+
+                        # Baixa a imagem para checar hash MD5 e aspect ratio
+                        try:
+                            img_res = await http_client.get(url, headers=headers, timeout=15, follow_redirects=True)
+                            if img_res.status_code == 200:
+                                img_content = img_res.content
+
+                                # Rejeita imagens com aspecto de documento/portrait
+                                if not _is_valid_car_image(img_content):
+                                    print(f"   [Aspecto Inválido] Rejeitado: {url}")
+                                    continue
+
+                                img_hash = hashlib.md5(img_content).hexdigest()
+                                if img_hash not in existing_hashes:
+                                    return url, img_content
+                                else:
+                                    print(f"   [Duplicada Ignorada] Hash {img_hash} já existente para outro carro. Skipping: {url}")
+                        except Exception:
+                            pass
         except Exception:
             pass
             

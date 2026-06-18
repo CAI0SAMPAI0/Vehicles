@@ -12,19 +12,38 @@ class Brand(models.Model):
         return self.name
 
 class Car(models.Model):
-    id = models.AutoField(primary_key=True) # id único e automático
-    model = models.CharField(max_length=200) # tamanho/caracteres máximos
-    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='car_brand') # protect para proteger de remover tudo
-    factory_year = models.IntegerField(blank=True, null=True) # campo não é obrigatório
+    CATEGORIA_CHOICES = [
+        ('SEDAN', 'Sedan'),
+        ('SUV', 'SUV'),
+        ('HATCH', 'Hatch'),
+        ('PICAPE', 'Picape'),
+        ('ESPORTIVO', 'Esportivo'),
+        ('MINIVAN', 'Minivan'),
+        ('ELETRICO', 'Elétrico'),
+        ('CLASSICO', 'Clássico'),
+        ('OUTRO', 'Outro'),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    model = models.CharField(max_length=200)
+    brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='car_brand')
+    factory_year = models.IntegerField(blank=True, null=True)
     model_year = models.IntegerField(blank=True, null=True)
-    plate = models.CharField(max_length=10, blank=True, null= True)
+    plate = models.CharField(max_length=10, blank=True, null=True)
     value = models.FloatField(blank=True, null=True)
     photo = models.ImageField(upload_to='cars/', blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+    categoria = models.CharField(
+        max_length=20,
+        choices=CATEGORIA_CHOICES,
+        blank=True,
+        null=True,
+        default=None,
+    )
     
     def __str__(self) -> str:
-        return self.model # fazendo mostrar o nome do carro ao invés do padrão feio do django
-    
+        return self.model
+
 class CarInventory(models.Model):
     cars_count = models.IntegerField()
     cars_value = models.FloatField()

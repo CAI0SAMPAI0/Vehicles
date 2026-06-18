@@ -5,14 +5,13 @@ from django.core.files.base import ContentFile
 
 def get_existing_photo_hashes():
     """
-    Computes and returns a set of MD5 hashes of all existing car photos.
+    Computes and returns a set of MD5 hashes of all existing valid car photos.
     """
     hashes = set()
     from cars.models import Car
     for car in Car.objects.exclude(photo='').exclude(photo__isnull=True):
         try:
             if car.photo:
-                # Open and read the image content
                 car.photo.open('rb')
                 content = car.photo.read()
                 car.photo.close()
@@ -23,11 +22,9 @@ def get_existing_photo_hashes():
             print(f"Error hashing photo for car {car.id}: {e}")
     return hashes
 
-def fetch_and_save_car_photo(car_id):
+def fetch_and_save_car_photo_with_hashes(car_id, existing_hashes):
     """
-    Searches Wikimedia Commons for a unique photo of the car.
-    Checks the MD5 hash of downloaded candidates against existing car photos.
-    Saves the first unique match.
+    Internal photo search and download function that reuses a set of existing photo hashes.
     """
     from cars.models import Car
     try:
@@ -50,8 +47,6 @@ def fetch_and_save_car_photo(car_id):
 
     headers = {"User-Agent": "CarrosBot/1.0 (cmsampaio71@gmail.com)"}
     search_url = "https://commons.wikimedia.org/w/api.php"
-
-    existing_hashes = get_existing_photo_hashes()
 
     for query in queries_to_try:
         query = query.strip()
@@ -94,17 +89,16 @@ def fetch_and_save_car_photo(car_id):
                                             img_content = img_res.content
                                             img_hash = hashlib.md5(img_content).hexdigest()
                                             
-                                            # If this image content hash is already assigned to another car, skip it
                                             if img_hash in existing_hashes:
-                                                print(f"   [Duplicate Detected] Hash {img_hash} already exists for another car. Skipping URL: {url}")
+                                                print(f"   [Duplicate Detected] Hash {img_hash} already exists. Skipping URL: {url}")
                                                 continue
                                             
-                                            # Unique image! Save it
                                             file_name = f"{brand_name}_{model_name}_{year}.jpg".replace(" ", "_").lower()
                                             car.photo.save(file_name, ContentFile(img_content), save=True)
-                                            print(f"   [Success] Saved unique background image for {brand_name} {model_name} from: {url}")
+                                            print(f"   [Success] Saved unique image for {brand_name} {model_name} from: {url}")
                                             
-                                            # Clear Redis/Django cache
+                                            existing_hashes.add(img_hash)
+                                            
                                             from django.core.cache import cache
                                             try:
                                                 cache.clear()
@@ -115,3 +109,62 @@ def fetch_and_save_car_photo(car_id):
                                         print(f"Error downloading/checking image from {url}: {e}")
         except Exception as e:
             print(f"Error during Wikimedia request for query '{query}': {e}")
+
+def fetch_and_save_car_photo(car_id):
+    """
+    Fetch image wrapper that retrieves the full set of hashes and requests a unique image.
+    """
+    existing_hashes = get_existing_photo_hashes()
+    fetch_and_save_car_photo_with_hashes(car_id, existing_hashes)
+
+def fix_all_photos():
+    """
+    Identifies all duplicate or broken photos in the database and updates them automatically.
+    """
+    from cars.models import Car
+    try:
+        cars = list(Car.objects.select_related('brand').all())
+    except Exception as e:
+        print(f"[Photo Cleanup Error] Could not list cars: {e}")
+        return
+    
+    seen_hashes = {}
+    duplicates = []
+    broken_or_missing = []
+    
+    print(f"[Photo Cleanup] Scanning {len(cars)} cars in database for duplicates and missing photos...")
+    
+    for car in cars:
+        if car.photo:
+            try:
+                car.photo.open('rb')
+                content = car.photo.read()
+                car.photo.close()
+                if content:
+                    img_hash = hashlib.md5(content).hexdigest()
+                    if img_hash in seen_hashes:
+                        duplicates.append(car)
+                    else:
+                        seen_hashes[img_hash] = car.id
+                else:
+                    broken_or_missing.append(car)
+            except Exception:
+                broken_or_missing.append(car)
+        else:
+            broken_or_missing.append(car)
+
+    existing_hashes = set(seen_hashes.keys())
+    to_fix = duplicates + broken_or_missing
+    if not to_fix:
+        print("[Photo Cleanup] All cars have unique, valid photos. Nothing to do!")
+        return
+        
+    print(f"[Photo Cleanup] Found {len(duplicates)} duplicate photos and {len(broken_or_missing)} missing/broken photos to repair.")
+    
+    for car in to_fix:
+        print(f"[Photo Cleanup] Repairing photo for {car.brand.name} {car.model} ({car.model_year or 'unknown'})...")
+        car.photo = None
+        car.save()
+        fetch_and_save_car_photo_with_hashes(car.id, existing_hashes)
+        
+    print("[Photo Cleanup] Finished photo scanning and repairs successfully!")

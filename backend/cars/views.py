@@ -104,9 +104,7 @@ def cars_api_list(request):
                 if photo_path.startswith('http'):
                     foto_url = photo_path
                 else:
-                    # Imagens em images/ são servidas como arquivos estáticos pelo WhiteNoise
-                    filename = photo_path.split('/')[-1]
-                    foto_url = f"{settings.STATIC_URL}{filename}"
+                    foto_url = f"{settings.MEDIA_URL}{photo_path}"
                 
         data.append({
             'id': car.id,
@@ -165,9 +163,7 @@ def car_detail_api(request, pk):
                 if photo_path.startswith('http'):
                     foto_url = photo_path
                 else:
-                    # Imagens em images/ são servidas como arquivos estáticos pelo WhiteNoise
-                    filename = photo_path.split('/')[-1]
-                    foto_url = f"{settings.STATIC_URL}{filename}"
+                    foto_url = f"{settings.MEDIA_URL}{photo_path}"
 
         return JsonResponse({
             'id': car.id,
@@ -195,5 +191,21 @@ def car_detail_api(request, pk):
         return JsonResponse({'success': True})
         
     return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+
+from django.http import FileResponse, Http404
+import os
+from django.conf import settings
+
+def serve_media_view(request, path):
+    """
+    Serves files from the media root (BASE_DIR) dynamically,
+    allowing dynamically downloaded background/uploaded photos to load on Render.
+    """
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'))
+    raise Http404("Media file not found")
+
 
 

@@ -86,10 +86,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentPage = 1;
             hasNextPage = true;
             currentCarsList = [];
-            if (carsGrid) carsGrid.innerHTML = '';
+            if (carsGrid) {
+                carsGrid.innerHTML = Array(6).fill(0).map(() => `
+                    <div class="skeleton-card">
+                        <div class="skeleton-img"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-line medium"></div>
+                            <div style="overflow: hidden; margin-top: 1.2rem;">
+                                <div class="skeleton-line last"></div>
+                                <div class="skeleton-line price"></div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } else if (carsGrid) {
+            // Append temporary skeletons at the bottom
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = Array(3).fill(0).map(() => `
+                <div class="skeleton-card temp-skeleton">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line short"></div>
+                        <div class="skeleton-line medium"></div>
+                        <div style="overflow: hidden; margin-top: 1.2rem;">
+                            <div class="skeleton-line last"></div>
+                            <div class="skeleton-line price"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            while (tempContainer.firstChild) {
+                carsGrid.appendChild(tempContainer.firstChild);
+            }
         }
         
-        if (!hasNextPage) return;
+        if (!hasNextPage) {
+            document.querySelectorAll('.temp-skeleton').forEach(el => el.remove());
+            return;
+        }
         isLoading = true;
 
         const query = searchInput?.value.toLowerCase().trim() || '';
@@ -107,6 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const response = await apiFetch<{ results: Car[], count: number, has_next: boolean }>(url);
             
+            document.querySelectorAll('.temp-skeleton').forEach(el => el.remove());
+            
             if (response) {
                 const newCars = response.results;
                 currentCarsList = [...currentCarsList, ...newCars];
@@ -117,10 +156,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (err) {
             console.error('Erro ao buscar carros:', err);
+            document.querySelectorAll('.temp-skeleton').forEach(el => el.remove());
             if (reset && carsGrid) {
                 carsGrid.innerHTML = `
-                    <div class="col-span-full text-center py-12">
-                        <p class="text-brand-red font-semibold">Erro ao carregar os carros do servidor.</p>
+                    <div class="col-span-full text-center py-12" style="grid-column: span 3; width: 100%;">
+                        <p class="text-brand-red font-semibold" style="color: var(--red);">Erro ao carregar os carros do servidor.</p>
                     </div>
                 `;
             }

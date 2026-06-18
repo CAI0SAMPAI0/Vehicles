@@ -1,8 +1,10 @@
+import threading
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Sum
 from django.dispatch import receiver
 from cars.models import Car, CarInventory
 from openai_api.client import get_car_ai_bio
+from cars.utils import fetch_and_save_car_photo
 
 def car_invetory_update():
     cars_count = Car.objects.all().count()
@@ -25,8 +27,13 @@ def car_pre_save(sender, instance, **kwargs):
 @receiver(post_save, sender=Car)
 def car_post_save(sender, instance, **kwargs):
     car_invetory_update()
+    if not instance.photo:
+        thread = threading.Thread(target=fetch_and_save_car_photo, args=(instance.id,))
+        thread.daemon = True
+        thread.start()
 
 
 @receiver(post_delete, sender=Car)
 def car_post_delete(sender, instance, **kwargs):
     car_invetory_update()
+

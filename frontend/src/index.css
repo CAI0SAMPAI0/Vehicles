@@ -957,4 +957,60 @@ footer p {
   }
 }
 
+/* ── SKELETON LOADERS ── */
+.skeleton-card {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 100%;
+}
+
+.skeleton-img {
+  aspect-ratio: 16/10;
+  background: linear-gradient(90deg, var(--dark) 25%, var(--border) 50%, var(--dark) 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+}
+
+.skeleton-body {
+  padding: 1.25rem 1.1rem;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, var(--dark) 25%, var(--border) 50%, var(--dark) 75%);
+  background-size: 200% 100%;
+  animation: loading-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.8rem;
+}
+
+.skeleton-line.short {
+  width: 40%;
+}
+
+.skeleton-line.medium {
+  width: 70%;
+}
+
+.skeleton-line.last {
+  margin-bottom: 0;
+  width: 50%;
+  display: inline-block;
+}
+
+.skeleton-line.price {
+  width: 30%;
+  float: right;
+  margin-bottom: 0;
+}
+
+@keyframes loading-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+
 

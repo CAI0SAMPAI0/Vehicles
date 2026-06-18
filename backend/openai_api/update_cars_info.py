@@ -154,16 +154,21 @@ async def get_real_car_price_from_ai(brand, model, year):
                     break
     return None
 
-async def get_car_image_url(http_client, make, model, year):
+import hashlib
+from cars.utils import get_existing_photo_hashes
+
+async def get_car_image_url(http_client, make, model, year, existing_hashes):
     """
     Busca uma imagem do carro no Wikimedia Commons de forma assíncrona.
     Utiliza gsrnamespace: 6 para garantir que apenas arquivos de mídia (File) sejam pesquisados.
+    Retorna uma tupla (url, content) da primeira imagem única.
     """
     make_clean = clean_string(make)
     model_clean = clean_string(model)
     full_name = get_full_car_name(make, model)
     
     queries_to_try = [
+        f"{make_clean} {model_clean} {year or ''} car",
         full_name,
         f"{make_clean} {model_clean.split()[0]}",
         model_clean
@@ -208,51 +213,58 @@ async def get_car_image_url(http_client, make, model, year):
                             url_lower = url.lower()
                             if any(url_lower.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.webp']):
                                 if not any(x in url_lower or x in title for x in ["logo", "emblem", "badge", "drawing", "diagram", "interior", "sign"]):
-                                    return url
+                                    # Baixa a imagem para checar hash MD5
+                                    try:
+                                        img_res = await http_client.get(url, headers=headers, timeout=15, follow_redirects=True)
+                                        if img_res.status_code == 200:
+                                            img_content = img_res.content
+                                            img_hash = hashlib.md5(img_content).hexdigest()
+                                            if img_hash not in existing_hashes:
+                                                return url, img_content
+                                            else:
+                                                print(f"   [Duplicada Ignorada] Hash {img_hash} já existente para outro carro. Skipping: {url}")
+                                    except Exception:
+                                        pass
         except Exception:
             pass
             
-    return None
+    return None, None
 
-async def download_and_save_image(http_client, car_obj, image_url):
+async def download_and_save_image(car_obj, url_and_content):
     """
-    Baixa a imagem, salva localmente na pasta backend/images e salva o caminho relativo no Supabase.
+    Salva a imagem baixada localmente na pasta backend/images e salva o caminho relativo no Supabase.
     """
-    if not image_url:
+    if not url_and_content or not url_and_content[1]:
         return False
         
+    image_url, content = url_and_content
     try:
-        headers = {"User-Agent": "CarrosBot/1.0 (cmsampaio71@gmail.com)"}
-        response = await http_client.get(image_url, headers=headers, timeout=15, follow_redirects=True)
-        if response.status_code == 200:
-            brand_clean = clean_string(car_obj.brand.name)
-            model_clean = clean_string(car_obj.model)
-            file_name = f"{brand_clean}_{model_clean}_{car_obj.model_year or 'unknown'}.jpg".replace(" ", "_").lower()
-            
-            backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            images_dir = os.path.join(backend_dir, 'images')
-            os.makedirs(images_dir, exist_ok=True)
-            
-            local_path = os.path.join(images_dir, file_name)
-            
-            # Salva localmente
-            with open(local_path, 'wb') as f:
-                f.write(response.content)
-            
-            # Salva o caminho relativo no banco de dados (Supabase)
-            def save_to_db():
-                car_obj.photo = f"images/{file_name}"
-                car_obj.save()
-            
-            await sync_to_async(save_to_db)()
-            return True
-        else:
-            print(f"   [Download Falhou] HTTP {response.status_code} para URL: {image_url}")
+        brand_clean = clean_string(car_obj.brand.name)
+        model_clean = clean_string(car_obj.model)
+        file_name = f"{brand_clean}_{model_clean}_{car_obj.model_year or 'unknown'}.jpg".replace(" ", "_").lower()
+        
+        backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        images_dir = os.path.join(backend_dir, 'images')
+        os.makedirs(images_dir, exist_ok=True)
+        
+        local_path = os.path.join(images_dir, file_name)
+        
+        # Salva localmente
+        with open(local_path, 'wb') as f:
+            f.write(content)
+        
+        # Salva o caminho relativo no banco de dados (Supabase)
+        def save_to_db():
+            car_obj.photo = f"images/{file_name}"
+            car_obj.save()
+        
+        await sync_to_async(save_to_db)()
+        return True
     except Exception as e:
-        print(f"   [Erro Mídia] Exceção ao baixar/salvar imagem de {car_obj.model}: {e}")
+        print(f"   [Erro Mídia] Exceção ao salvar imagem de {car_obj.model}: {e}")
     return False
 
-async def process_single_car(http_client, car):
+async def process_single_car(http_client, car, existing_hashes):
     """
     Processa um único carro respeitando o semáforo.
     """
@@ -277,18 +289,19 @@ async def process_single_car(http_client, car):
         # 2. Obter e atualizar a imagem se a foto atual estiver quebrada (ou se não houver foto)
         photo_broken = await is_car_photo_broken(http_client, car)
         if photo_broken:
-            print(f"   [Verificação] Imagem ausente ou quebrada no Cloudinary. Buscando nova foto...")
-            image_url = await get_car_image_url(http_client, car.brand.name, car.model, car.model_year)
-            if image_url:
-                success = await download_and_save_image(http_client, car, image_url)
+            print(f"   [Verificação] Imagem ausente ou quebrada. Buscando nova foto...")
+            url_and_content = await get_car_image_url(http_client, car.brand.name, car.model, car.model_year, existing_hashes)
+            if url_and_content[1]:
+                success = await download_and_save_image(car, url_and_content)
                 if success:
                     print(f"   [Imagem Atualizada] {full_name} com nova foto.")
+                    existing_hashes.add(hashlib.md5(url_and_content[1]).hexdigest())
                 else:
                     print(f"   [Imagem Falhou] Não foi possível salvar a imagem.")
             else:
-                print(f"   [Imagem Não Encontrada] Nenhuma foto encontrada para {full_name}.")
+                print(f"   [Imagem Não Encontrada] Nenhuma foto única encontrada para {full_name}.")
         else:
-            print(f"   [Imagem Preservada] {full_name} já possui uma foto válida no Cloudinary.")
+            print(f"   [Imagem Preservada] {full_name} já possui uma foto válida.")
             
         print(f"[Concluído] {full_name}")
         print("-" * 50)
@@ -301,11 +314,14 @@ async def main():
     total_cars = len(cars)
     print(f"Iniciando processamento assíncrono de {total_cars} carros cadastrados no banco de dados...\n")
     
+    existing_hashes = await sync_to_async(get_existing_photo_hashes)()
+    
     async with httpx.AsyncClient() as http_client:
-        tasks = [process_single_car(http_client, car) for car in cars]
+        tasks = [process_single_car(http_client, car, existing_hashes) for car in cars]
         await asyncio.gather(*tasks)
 
     print("\nProcessamento assíncrono concluído com sucesso!")
 
 if __name__ == '__main__':
     asyncio.run(main())
+

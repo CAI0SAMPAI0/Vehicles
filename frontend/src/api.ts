@@ -44,3 +44,16 @@ export async function apiFetch<T = any>(endpoint: string, options: RequestInit =
         throw error;
     }
 }
+
+// Clear search filters when clicking the logo
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.nav-logo').forEach(logo => {
+            logo.addEventListener('click', () => {
+                sessionStorage.removeItem('last_search_query');
+                sessionStorage.removeItem('last_selected_brand');
+            });
+        });
+    });
+}
+

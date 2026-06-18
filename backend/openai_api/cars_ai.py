@@ -33,17 +33,21 @@ if not GROQ_API_KEY:
 
 client = Groq(api_key=GROQ_API_KEY)
 
-def get_car_image_url(make, model, year):
+import hashlib
+from cars.utils import get_existing_photo_hashes
+
+def get_car_image_data(make, model, year, existing_hashes):
     """
-    Busca uma imagem do carro diretamente no Wikimedia Commons para maior precisão.
+    Busca uma imagem do carro diretamente no Wikimedia Commons e retorna (url, content) da primeira imagem única.
     """
     headers = {"User-Agent": "CarrosBot/1.0 (cmsampaio71@gmail.com)"}
     search_url = "https://commons.wikimedia.org/w/api.php"
     
+    # Adicionando o ano na busca para maior precisão
     search_params = {
         "action": "query",
         "generator": "search",
-        "gsrsearch": f"{make} {model} car filetype:bitmap",
+        "gsrsearch": f"{make} {model} {year} car filetype:bitmap",
         "gsrlimit": 5,
         "prop": "imageinfo",
         "iiprop": "url",
@@ -55,7 +59,6 @@ def get_car_image_url(make, model, year):
         res = requests.get(search_url, params=search_params, headers=headers, timeout=10).json()
         pages = res.get("query", {}).get("pages", {})
         
-        # Ordena os resultados por relevância (índice retornado pela busca)
         pages_list = list(pages.values())
         pages_list.sort(key=lambda x: x.get("index", 999))
         
@@ -67,31 +70,37 @@ def get_car_image_url(make, model, year):
                 
                 # Ignorar imagens que parecem ser logos ou emblemas
                 if "logo" not in url.lower() and "emblem" not in url.lower() and "logo" not in title and "emblem" not in title and "badge" not in title:
-                    return url
+                    try:
+                        img_res = requests.get(url, headers=headers, timeout=15)
+                        if img_res.status_code == 200:
+                            content = img_res.content
+                            img_hash = hashlib.md5(content).hexdigest()
+                            if img_hash not in existing_hashes:
+                                return url, content
+                            else:
+                                print(f"   [Duplicada Ignorada] Hash {img_hash} já existente para outro carro. Skipping: {url}", flush=True)
+                    except Exception:
+                        pass
     except Exception as e:
         print(f"   [Erro API Commons] {e}", flush=True)
         
-    return None
+    return None, None
 
-def download_and_save_image(car_obj, image_url):
+def download_and_save_image(car_obj, url_and_content):
     """
-    Baixa a imagem da URL e salva no campo photo do modelo Car.
+    Salva a imagem baixada no campo photo do modelo Car.
     O Django Cloudinary Storage cuidará do upload para o Cloudinary automaticamente.
     """
-    if not image_url:
+    if not url_and_content or not url_and_content[1]:
         return False
         
+    image_url, content = url_and_content
     try:
-        print(f"   [Imagem] Baixando: {image_url}", flush=True)
-        headers = {"User-Agent": "CarrosBot/1.0 (cmsampaio71@gmail.com)"}
-        response = requests.get(image_url, headers=headers, timeout=15)
-        if response.status_code == 200:
-            file_name = f"{car_obj.brand.name}_{car_obj.model}_{car_obj.model_year or 'unknown'}.jpg".replace(" ", "_").lower()
-            car_obj.photo.save(file_name, ContentFile(response.content), save=True)
-            print(f"   [Sucesso] Imagem salva para {car_obj.model}", flush=True)
-            return True
-        else:
-            print(f"   [Erro] Falha ao baixar imagem (Status: {response.status_code})", flush=True)
+        print(f"   [Imagem] Salvando de: {image_url}", flush=True)
+        file_name = f"{car_obj.brand.name}_{car_obj.model}_{car_obj.model_year or 'unknown'}.jpg".replace(" ", "_").lower()
+        car_obj.photo.save(file_name, ContentFile(content), save=True)
+        print(f"   [Sucesso] Imagem salva para {car_obj.model}", flush=True)
+        return True
     except Exception as e:
         print(f"   [Erro] Exceção ao salvar imagem: {e}", flush=True)
     return False
@@ -165,6 +174,7 @@ def main():
 
     print("Iniciando importação de carros com IA...", flush=True)
     
+    existing_hashes = get_existing_photo_hashes()
     processed_count = 0
     with open(csv_file_path, mode='r', encoding='utf-8-sig') as f:
         reader = csv.reader(f)
@@ -209,14 +219,18 @@ def main():
                 if car_created:
                     print(f"   [Adicionado] {brand_name} {model_name} - R$ {car_obj.value} ({car_obj.model_year})", flush=True)
                     # Busca e salva a imagem do carro
-                    image_url = get_car_image_url(brand_name, model_name, car_obj.model_year or 2023)
-                    download_and_save_image(car_obj, image_url)
+                    url_and_content = get_car_image_data(brand_name, model_name, car_obj.model_year or 2023, existing_hashes)
+                    if url_and_content[1]:
+                        download_and_save_image(car_obj, url_and_content)
+                        existing_hashes.add(hashlib.md5(url_and_content[1]).hexdigest())
                 else:
                     # Se o carro já existe mas não tem foto, tenta baixar uma
                     if not car_obj.photo:
                         print(f"   [Atualizando] {brand_name} {model_name} (Sem foto)", flush=True)
-                        image_url = get_car_image_url(brand_name, model_name, car_obj.model_year or 2023)
-                        download_and_save_image(car_obj, image_url)
+                        url_and_content = get_car_image_data(brand_name, model_name, car_obj.model_year or 2023, existing_hashes)
+                        if url_and_content[1]:
+                            download_and_save_image(car_obj, url_and_content)
+                            existing_hashes.add(hashlib.md5(url_and_content[1]).hexdigest())
                     else:
                         print(f"   [Ignorado] {brand_name} {model_name} (Já existente com foto)", flush=True)
 

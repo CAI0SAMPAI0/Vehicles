@@ -94,7 +94,7 @@ def cars_api_list(request):
 
     total_count = cars.count()
 
-    page_size = 30
+    page_size = 15
     start = (page - 1) * page_size
     end = start + page_size
     cars_page = cars[start:end]

@@ -1,0 +1,51 @@
+name: Deploy Backend to Hugging Face
+
+on:
+  push:
+    branches:
+      - main
+    # Opcional: Apenas dispara se houver alterações no backend, no Dockerfile ou nas configurações
+    paths:
+      - 'backend/**'
+      - 'Dockerfile'
+      - 'README.md'
+      - '.github/workflows/deploy_hf.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessário para empurrar o histórico do git completo
+
+      - name: Setup Git LFS
+        run: |
+          git lfs install
+
+      - name: Prepare Clean Backend Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Remove o rastreamento das pastas do frontend e imagens de carros locais do index
+          git rm -r --cached frontend/ || true
+          git rm -r --cached cars/ || true
+          git rm -r --cached .venv/ || true
+          
+          # Exclui fisicamente do diretório de build
+          rm -rf frontend/ cars/ .venv/
+
+      - name: Commit Changes
+        run: |
+          git add -A
+          # Comita apenas se houver diferenças (geralmente haverá por remover as pastas do rastreamento)
+          git diff-index --quiet HEAD || git commit -m "Deploy: Django Backend (Clean backend-only build via GitHub Actions)"
+
+      - name: Push to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Envia forçado para o branch main do space na Hugging Face
+          git push https://caio007:$HF_TOKEN@huggingface.co/spaces/caio007/vehicles HEAD:refs/heads/main --force

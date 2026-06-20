@@ -30,20 +30,23 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Remove o rastreamento das pastas do frontend e imagens de carros locais do index
+          # 1. Cria uma branch órfã temporária sem histórico de commits
+          git checkout --orphan temp-deploy-branch
+          
+          # 2. Remove o rastreamento do index
           git rm -r --cached frontend/ || true
           git rm -r --cached cars/ || true
           git rm -r --cached .venv/ || true
           
-          # Exclui fisicamente do diretório de build
+          # Exclui fisicamente
           rm -rf frontend/ cars/ .venv/
 
-      - name: Commit Changes
+      - name: Commit and Renormalize
         run: |
-          # Força a re-normalização de todas as imagens para ponteiros LFS
+          # 3. Força a re-normalização de todas as imagens restantes para LFS
           git add --renormalize .
           git add -A
-          git commit -m "Deploy: Django Backend (LFS converted via GitHub Actions)"
+          git commit -m "Deploy: Django Backend (Clean single-commit LFS deploy)"
 
       - name: Push to Hugging Face Spaces
         env:

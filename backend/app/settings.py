@@ -90,8 +90,24 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://autodrivecars.netlify.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:8000',
+    'http://127.0.0.1:5173',
+    'http://localhost:5173',
+]
+
+space_id = os.getenv('SPACE_ID')
+if space_id and '/' in space_id:
+    user, space = space_id.split('/')
+    user_name = user.replace('.', '-').replace('_', '-').lower()
+    space_name = space.replace('.', '-').replace('_', '-').lower()
+    CSRF_TRUSTED_ORIGINS.append(f'https://{user_name}-{space_name}.hf.space')
+
 csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS')
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_env.split(',') if origin.strip()] if csrf_env else []
+if csrf_env:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in csrf_env.split(',') if origin.strip()])
 
 # Configurações de cookies para suporte a CORS e Sessões Cruzadas (Cross-Origin)
 SESSION_COOKIE_SAMESITE = 'None'

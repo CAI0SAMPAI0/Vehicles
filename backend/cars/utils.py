@@ -4,6 +4,8 @@ import hashlib
 import requests
 from django.core.files.base import ContentFile
 from django.db.models.signals import post_save
+from datetime import datetime
+
 
 # Termos proibidos no título ou URL da imagem (documentos, mapas, diagramas, logos, etc.)
 PHOTO_BLACKLIST = [
@@ -207,7 +209,7 @@ def fix_all_photos():
         duplicates = []
         broken_or_missing = []
 
-        print(f"[Photo Cleanup] Iniciando varredura em {len(cars)} carros no banco de dados...")
+        print(f"[{datetime.now()}] [Photo Cleanup] Iniciando varredura em {len(cars)} carros no banco de dados...")
 
         for car in cars:
             if car.photo:
@@ -234,20 +236,20 @@ def fix_all_photos():
         to_fix = duplicates + broken_or_missing
 
         if not to_fix:
-            print("[Photo Cleanup] Todos os carros possuem fotos válidas e exclusivas. Nada a fazer!")
+            print(f"[{datetime.now()}] [Photo Cleanup] Todos os carros possuem fotos válidas e exclusivas. Nada a fazer!")
             return
 
-        print(f"[Photo Cleanup] Encontrados {len(duplicates)} duplicados e {len(broken_or_missing)} sem fotos/quebradas.")
+        print(f"[{datetime.now()}] [Photo Cleanup] Encontrados {len(duplicates)} duplicados e {len(broken_or_missing)} sem fotos/quebradas.")
 
         for car in to_fix:
-            print(f"[Photo Cleanup] Reparando foto de {car.brand.name} {car.model} ({car.model_year or 'unknown'})...")
+            print(f"[{datetime.now()}] [Photo Cleanup] Reparando foto de {car.brand.name} {car.model} ({car.model_year or 'unknown'})...")
             car.photo = None
             car.save()
             fetch_and_save_car_photo_with_hashes(car.id, existing_hashes)
 
-        print("[Photo Cleanup] Varredura e reparos finalizados com sucesso!")
+        print(f"[{datetime.now()}] [Photo Cleanup] Varredura e reparos finalizados com sucesso!")
 
     except Exception as e:
-        print(f"[Photo Cleanup Error] Ocorreu um erro no processo de reparo: {e}")
+        print(f"[{datetime.now()}] [Photo Cleanup Error] Ocorreu um erro no processo de reparo: {e}")
     finally:
         post_save.connect(car_post_save, sender=Car)

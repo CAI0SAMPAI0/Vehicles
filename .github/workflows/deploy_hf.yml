@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Necessário para empurrar o histórico do git completo
+          lfs: true
 
       - name: Setup Git LFS
         run: |

@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const categoryFilter = document.getElementById('category-filter') as HTMLSelectElement | null;
     const loadMoreBtn    = document.getElementById('load-more-btn')   as HTMLButtonElement | null;
 
-    const ITEMS_PER_PAGE = 15;
+    const ITEMS_PER_PAGE = 30;
     let currentPage = 1;
     let hasNextPage = true;
     let isLoading = false;

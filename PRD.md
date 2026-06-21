@@ -59,3 +59,25 @@ O **AutoDrive** (também denominado **Carros**) é um sistema de gerenciamento d
 - **Banco de Dados**: PostgreSQL (configuração flexível via `dj_database_url` para ambientes de nuvem como Railway).
 - **Armazenamento de Mídia**: Integração nativa com Cloudinary via `django-cloudinary-storage` para persistência confiável das imagens de veículos.
 - **Interface e Design**: Interface responsiva com tema escuro (dark mode), tipografia moderna (Google Fonts - Barlow e Bebas Neue) e transições suaves, usando Vanilla CSS.
+
+---
+
+## 5. Sprints e Acompanhamento de Tarefas
+
+Nesta seção, listamos as sprints de desenvolvimento para a melhoria contínua da IA e integridade do backend.
+
+- [X] **Sprint 1: Análise e Planejamento**
+  - [X] Mapear o funcionamento do Django no Hugging Face Spaces.
+  - [X] Investigar a estrutura de carregamento do app `cars` e controle de processos de segundo plano.
+- [X] **Sprint 2: Desenvolvimento do Worker de Segundo Plano (`worker.py`)**
+  - [X] Criar o arquivo [worker.py](file:///C:/Users/caio/Documents/GitHub/Vehicles/backend/cars/worker.py) com loop infinito de atualização automática.
+  - [X] Implementar busca e download automático de imagens (com integração com Cloudinary) e classificação automática de categoria usando a API da Groq.
+- [X] **Sprint 3: Lock Robusto para Multi-Workers e Inicialização (`apps.py`)**
+  - [X] Refatorar a classe `CarsConfig` em [apps.py](file:///C:/Users/caio/Documents/GitHub/Vehicles/backend/cars/apps.py) para utilizar verificação de PID ao gerenciar locks de worker.
+  - [X] Integrar a inicialização do worker de segundo plano ao invés de rodar uma única varredura.
+- [X] **Sprint 4: Mecanismo de Ping/Keep-Alive**
+  - [X] Implementar função `ping_self()` no worker para fazer chamadas HTTP à URL pública do Hugging Face Space para evitar inatividade.
+- [X] **Sprint 5: Validação Final e Commit**
+  - [X] Executar testes locais básicos para garantir que a sintaxe Python e as importações do Django estão corretas.
+  - [X] Realizar o commit das modificações e fazer o `git push`.
+

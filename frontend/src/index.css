@@ -372,6 +372,15 @@ footer p {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.search-controls {
+  flex: 1;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .search-label {
@@ -934,8 +943,17 @@ footer p {
     font-size: 1.4rem;
   }
   
-  .search-bar {
-    max-width: 100%;
+  .search-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-controls .search-bar {
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  .search-controls .filter-select {
     width: 100%;
   }
 

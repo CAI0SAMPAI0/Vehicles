@@ -16,13 +16,49 @@ interface CarDetails {
     ano_modelo: number | null;
     placa: string | null;
     preco: number | null;
+    moeda: string | null;
     foto: string | null;
     descricao: string | null;
 }
 
+let usdToBrlRate = 5.50; // valor padrão fallback
+
+async function fetchExchangeRate() {
+    try {
+        const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.USDBRL && data.USDBRL.bid) {
+                usdToBrlRate = parseFloat(data.USDBRL.bid);
+                console.log('Taxa de câmbio USD-BRL obtida:', usdToBrlRate);
+            }
+        }
+    } catch (err) {
+        console.error('Falha ao obter cotação atual. Usando fallback:', err);
+    }
+}
+
+function formatCurrency(val: number, currencyCode: string): string {
+    if (currencyCode === 'USD') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2
+        }).format(val);
+    } else {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2
+        }).format(val);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Verificar autenticação
+    // 1. Verificar autenticação e cotação
+    await fetchExchangeRate();
     const username = localStorage.getItem('username');
+    let lastCurrency = 'BRL';
     if (!username) {
         showToast('Você precisa estar logado para acessar esta página.', 'error');
         setTimeout(() => {
@@ -75,17 +111,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const valueInput = document.getElementById('value') as HTMLInputElement | null;
                 const bioInput = document.getElementById('bio') as HTMLTextAreaElement | null;
 
+                const currencySelect = document.getElementById('currency') as HTMLSelectElement | null;
                 if (modelInput) modelInput.value = car.modelo;
                 if (brandSelect && car.brand) brandSelect.value = car.brand.toString();
                 if (factoryYearInput && car.ano_fabricacao) factoryYearInput.value = car.ano_fabricacao.toString();
                 if (modelYearInput && car.ano_modelo) modelYearInput.value = car.ano_modelo.toString();
                 if (plateInput) plateInput.value = car.placa || '';
+                if (currencySelect && car.moeda) {
+                    currencySelect.value = car.moeda;
+                    lastCurrency = car.moeda;
+                }
                 if (valueInput && car.preco) {
-                    valueInput.value = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                        minimumFractionDigits: 2
-                    }).format(car.preco);
+                    const currentCurrency = car.moeda || 'BRL';
+                    valueInput.value = formatCurrency(car.preco, currentCurrency);
                 }
                 if (bioInput && car.descricao) bioInput.value = car.descricao;
 
@@ -115,8 +153,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Limpa formatação de moeda antes do envio
             const rawValue = formData.get('value') as string | null;
+            const selectedCurrency = formData.get('currency') as string || 'BRL';
             if (rawValue) {
-                const cleanValue = rawValue.replace(/[^\d,]/g, '').replace(',', '.');
+                let cleanValue = '';
+                if (selectedCurrency === 'BRL') {
+                    cleanValue = rawValue.replace(/[^\d,]/g, '').replace(',', '.');
+                } else {
+                    cleanValue = rawValue.replace(/[^\d.]/g, '');
+                }
                 formData.set('value', cleanValue);
             }
 
@@ -166,6 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modelYearInput = document.getElementById('model_year') as HTMLInputElement | null;
     const plateInput = document.getElementById('plate') as HTMLInputElement | null;
     const valueInput = document.getElementById('value') as HTMLInputElement | null;
+    const currencySelect = document.getElementById('currency') as HTMLSelectElement | null;
 
     const setupYearMask = (input: HTMLInputElement) => {
         input.addEventListener('input', () => {
@@ -188,17 +233,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (valueInput) {
         valueInput.addEventListener('input', () => {
+            const currentCurrency = currencySelect?.value || 'BRL';
             let val = valueInput.value.replace(/\D/g, '');
             if (val) {
                 const numberVal = parseFloat(val) / 100;
-                valueInput.value = new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                    minimumFractionDigits: 2
-                }).format(numberVal);
+                valueInput.value = formatCurrency(numberVal, currentCurrency);
             } else {
                 valueInput.value = '';
             }
+        });
+    }
+
+    if (currencySelect) {
+        currencySelect.addEventListener('change', () => {
+            const newCurrency = currencySelect.value;
+            if (newCurrency === lastCurrency) return;
+
+            let val = valueInput?.value.replace(/\D/g, '');
+            if (val && valueInput) {
+                let numericVal = parseFloat(val) / 100;
+
+                // Converte utilizando a taxa obtida da AwesomeAPI
+                if (lastCurrency === 'BRL' && newCurrency === 'USD') {
+                    numericVal = numericVal / usdToBrlRate;
+                } else if (lastCurrency === 'USD' && newCurrency === 'BRL') {
+                    numericVal = numericVal * usdToBrlRate;
+                }
+
+                valueInput.value = formatCurrency(numericVal, newCurrency);
+            }
+            lastCurrency = newCurrency;
         });
     }
 

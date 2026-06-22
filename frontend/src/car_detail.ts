@@ -11,12 +11,47 @@ interface CarDetails {
     ano_modelo: number | null;
     placa: string | null;
     preco: number | null;
+    moeda: string | null;
     foto: string | null;
     descricao: string | null;
 }
 
+let usdToBrlRate = 5.50;
+
+async function fetchExchangeRate() {
+    try {
+        const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.USDBRL && data.USDBRL.bid) {
+                usdToBrlRate = parseFloat(data.USDBRL.bid);
+                console.log('Taxa de câmbio USD-BRL obtida:', usdToBrlRate);
+            }
+        }
+    } catch (err) {
+        console.error('Falha ao obter cotação:', err);
+    }
+}
+
+function formatCurrency(val: number, currencyCode: string): string {
+    if (currencyCode === 'USD') {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(val);
+    } else {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            maximumFractionDigits: 0
+        }).format(val);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Obter ID do carro da URL
+    // 1. Obter ID do carro da URL e buscar cotação
+    await fetchExchangeRate();
     const urlParams = new URLSearchParams(window.location.search);
     const carId = urlParams.get('id');
 
@@ -67,14 +102,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, 1500);
     }
 
-    // Função para renderizar os dados no DOM
     function renderCarDetails(car: CarDetails) {
         const fotoUrl = car.foto 
             ? (car.foto.startsWith('http') ? car.foto : `${API_BASE_URL}${car.foto}`) 
             : '';
-        const precoFormatado = car.preco 
-            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(car.preco)
-            : 'Preço sob consulta';
+        
+        const currentCurrency = car.moeda || 'BRL';
+        let precoFormatado = '';
+        let precoConvertido = '';
+
+        if (car.preco) {
+            if (currentCurrency === 'USD') {
+                precoFormatado = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(car.preco);
+                const valorEmBrl = car.preco * usdToBrlRate;
+                precoConvertido = ` (~ ` + new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(valorEmBrl) + `)`;
+            } else {
+                precoFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(car.preco);
+                const valorEmUsd = car.preco / usdToBrlRate;
+                precoConvertido = ` (~ ` + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(valorEmUsd) + `)`;
+            }
+        } else {
+            precoFormatado = 'Preço sob consulta';
+        }
 
         if (photoContainer) {
             if (fotoUrl) {
@@ -93,7 +142,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (brandTag) brandTag.textContent = car.marca || 'MARCA';
         if (modelTitle) modelTitle.textContent = car.modelo;
-        if (valueDisplay) valueDisplay.textContent = precoFormatado;
+        if (valueDisplay) {
+            valueDisplay.innerHTML = `${precoFormatado}<span style="font-size: 0.95rem; color: var(--text-dim); font-weight: 400; margin-left: 0.5rem;">${precoConvertido}</span>`;
+        }
 
         // Configurar Simulador de Financiamento se houver preço
         const simCard = document.getElementById('financing-simulator-card');
@@ -106,11 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Entrada padrão de 30% arredondada
             const defaultEntrada = Math.round(car.preco * 0.3);
-            simEntrada.value = new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0
-            }).format(defaultEntrada);
+            simEntrada.value = formatCurrency(defaultEntrada, currentCurrency);
 
             const calculateFinancing = () => {
                 if (!car.preco) return;
@@ -133,22 +180,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Fórmula Price: P = (A * i) / (1 - (1 + i)^-n)
                 const installment = (financedAmount * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -months));
                 
-                simResultValue.textContent = new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                    maximumFractionDigits: 2
-                }).format(installment);
+                simResultValue.textContent = formatCurrency(installment, currentCurrency);
             };
 
             simEntrada.addEventListener('input', () => {
                 let val = simEntrada.value.replace(/\D/g, '');
                 if (val) {
                     const numberVal = parseFloat(val);
-                    simEntrada.value = new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                        maximumFractionDigits: 0
-                    }).format(numberVal);
+                    simEntrada.value = formatCurrency(numberVal, currentCurrency);
                 } else {
                     simEntrada.value = '';
                 }

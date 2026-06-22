@@ -100,6 +100,7 @@ Nesta seção, listamos as sprints de desenvolvimento para a melhoria contínua 
   - [X] **Melhoria 8**: Adicionar ordenação (preco/ano) diretamente nos filtros e buscas (backend & frontend).
   - [ ] **Melhoria 9**: Monitorar links de imagens quebrados via cron semanal de checagem.
   - [ ] **Melhoria 10**: Configurar suporte multi-idiomas (i18n).
+  - [X] **Melhoria Extra (Design)**: Correção da sobreposição do título 'GARAGEM' (z-index) e redimensionamento responsivo dos inputs no mobile.
 - [ ] **Sprint 9: Novidades e Inovações (Backlog)**
   - [ ] **Novidade 1**: Criar painel comparador de até 3 veículos lado a lado.
   - [ ] **Novidade 2**: Busca semântica conversacional usando embeddings da Groq e `pgvector`.
@@ -111,4 +112,5 @@ Nesta seção, listamos as sprints de desenvolvimento para a melhoria contínua 
   - [ ] **Novidade 8**: Dashboard administrativo com estatísticas e relatórios de buscas.
   - [ ] **Novidade 9**: Alerta de redução de preço por e-mail para veículos favoritados.
   - [ ] **Novidade 10**: Chatbot integrado para recomendação e suporte de vendas de carros.
+  - [X] **Novidade Extra (Multi-Moedas)**: Suporte a salvar carros em USD ou BRL com formatação automática de inputs e conversão dinâmica em tempo real via AwesomeAPI.
 

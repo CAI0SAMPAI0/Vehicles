@@ -7,6 +7,7 @@ interface Car {
     modelo: string;
     ano: number | null;
     preco: number | null;
+    moeda: string | null;
     foto: string | null;
     descricao: string | null;
     categoria: string | null;
@@ -228,7 +229,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 : '';
 
             const precoFormatado = car.preco
-                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(car.preco)
+                ? (car.moeda === 'USD'
+                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(car.preco)
+                    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(car.preco))
                 : 'Preço sob consulta';
 
             const indexString = (index + 1).toString().padStart(2, '0');

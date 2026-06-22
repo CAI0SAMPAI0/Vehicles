@@ -30,7 +30,17 @@ class Car(models.Model):
     factory_year = models.IntegerField(blank=True, null=True)
     model_year = models.IntegerField(blank=True, null=True)
     plate = models.CharField(max_length=10, blank=True, null=True)
+    CURRENCY_CHOICES = [
+        ('BRL', 'BRL (R$)'),
+        ('USD', 'USD ($)'),
+    ]
+
     value = models.FloatField(blank=True, null=True)
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='BRL',
+    )
     photo = models.ImageField(upload_to='cars/', blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     categoria = models.CharField(

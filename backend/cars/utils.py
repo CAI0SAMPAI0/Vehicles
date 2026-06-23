@@ -10,11 +10,14 @@ from datetime import datetime
 
 PHOTO_BLACKLIST = [
     "logo", "emblem", "badge", "drawing", "diagram", "interior",
-    "document", "mapa", "pdf", "chart", "graph",
+    "document", "mapa", "map", "pdf", "chart", "graph",
     "schematic", "blueprint", "brochure",
     "advertisement", "catalogue", "catalog", "flyer",
-    "manual", "aerial", "satellite", "coat_of_arms",
-    "symbol", "stamp",
+    "manual", "aerial", "satellite", "coat_of_arms", "flag",
+    "symbol", "stamp", "gun", "weapon", "pistol", "firearm",
+    "sig", "sauer", "rifle", "artillery", "municipality",
+    "city", "town", "village", "province", "county", "album",
+    "band", "song", "movie", "book", "building", "architecture",
 ]
 
 
@@ -133,8 +136,27 @@ def _fetch_wikipedia_thumbnail(brand_name, model_name, year, headers):
                 if not results:
                     continue
 
-                # Pega o título do artigo mais relevante
-                article_title = results[0]["title"]
+                # Valida se o artigo parece ser sobre um veículo (evitar armas, bandas, lugares)
+                valid_article = None
+                vehicle_terms = ['car', 'truck', 'bus', 'vehicle', 'auto', 'van', 'suv', 'motorcycle', 'caminhão', 'carro', 'ônibus', 'tractor', 'engine', 'motor', 'pickup', 'picape', 'sedan', 'hatch']
+                brand_lower = brand_name.lower()
+                
+                for r in results:
+                    snippet = r.get("snippet", "").lower()
+                    r_title = r.get("title", "").lower()
+                    has_brand = brand_lower in r_title or brand_lower in snippet
+                    has_vehicle = any(term in snippet or term in r_title for term in vehicle_terms)
+                    
+                    if has_brand or has_vehicle:
+                        valid_article = r["title"]
+                        break
+                        
+                if not valid_article:
+                    print(f"   [Wikipedia-{wiki_lang}] Artigo rejeitado por falta de contexto automotivo: '{title}'", flush=True)
+                    continue
+
+                # Pega o título do artigo mais relevante que passou no filtro
+                article_title = valid_article
 
                 # 2. Busca a thumbnail do artigo
                 image_params = {
@@ -243,6 +265,19 @@ def _fetch_commons_search(brand_name, model_name, year, headers):
                 # Verifica blacklist
                 if _url_is_blacklisted(url, title):
                     print(f"   [Commons] Blacklist rejeitou: {title}", flush=True)
+                    continue
+
+                # Valida contexto automotivo no Commons
+                title_lower = title.lower()
+                vehicle_terms = ['car', 'truck', 'bus', 'vehicle', 'auto', 'van', 'suv', 'motorcycle', 'caminhão', 'carro', 'ônibus', 'tractor', 'trailer', 'coach', 'vw', 'volkswagen', 'chevrolet', 'ford', 'fiat', 'honda', 'toyota']
+                is_safe = brand_name.lower() in title_lower
+                if not is_safe:
+                    for term in vehicle_terms:
+                        if re.search(r'\b' + term + r'\b', title_lower):
+                            is_safe = True
+                            break
+                if not is_safe:
+                    print(f"   [Commons] Rejeitado por falta de contexto automotivo: {title}", flush=True)
                     continue
 
                 # Valida aspect ratio

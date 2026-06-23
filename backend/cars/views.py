@@ -51,7 +51,16 @@ class CarDeleteView(DeleteView):
 
 
 def _build_foto_url(car_or_img, settings):
-    """Constrói a URL da foto do carro ou imagem adicional de forma centralizada."""
+    """Constrói a URL da foto do carro ou imagem adicional de forma centralizada.
+    Prioriza `photo_url` (URL externa persistida no PostgreSQL) antes do campo
+    `photo` (arquivo local, efêmero em ambientes como HF Spaces).
+    """
+    # 1. Prioriza photo_url (URL externa, persiste no banco)
+    photo_url = getattr(car_or_img, 'photo_url', None)
+    if photo_url:
+        return photo_url
+
+    # 2. Fallback para photo (arquivo local — compatibilidade retroativa)
     field = getattr(car_or_img, 'photo', None) or getattr(car_or_img, 'image', None)
     if not field:
         return None

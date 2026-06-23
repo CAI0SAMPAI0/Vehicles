@@ -114,7 +114,7 @@ def car_post_save(sender, instance, created, **kwargs):
 
     # Só dispara IA e foto quando houver campos faltando (evita re-trigger de update_fields)
     needs_ai = not instance.bio or not instance.categoria or not instance.ficha_tecnica
-    needs_photo = not instance.photo
+    needs_photo = not instance.photo and not instance.photo_url
 
     if needs_ai:
         thread = threading.Thread(target=_fill_ai_fields_async, args=(instance.id,))

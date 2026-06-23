@@ -20,6 +20,7 @@ interface CarDetails {
     moeda: string | null;
     foto: string | null;
     descricao: string | null;
+    categoria?: string | null;
 }
 
 let usdToBrlRate = 5.50; // valor padrão fallback
@@ -162,10 +163,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const plateInput = document.getElementById('plate') as HTMLInputElement | null;
                 const valueInput = document.getElementById('value') as HTMLInputElement | null;
                 const bioInput = document.getElementById('bio') as HTMLTextAreaElement | null;
+                const catSelect = document.getElementById('categoria') as HTMLSelectElement | null;
 
                 const currencySelect = document.getElementById('currency') as HTMLSelectElement | null;
                 if (modelInput) modelInput.value = car.modelo;
                 if (brandSelect && car.brand) brandSelect.value = car.brand.toString();
+                if (catSelect && car.categoria) catSelect.value = car.categoria;
                 if (factoryYearInput && car.ano_fabricacao) factoryYearInput.value = car.ano_fabricacao.toString();
                 if (modelYearInput && car.ano_modelo) modelYearInput.value = car.ano_modelo.toString();
                 if (plateInput) plateInput.value = car.placa || '';

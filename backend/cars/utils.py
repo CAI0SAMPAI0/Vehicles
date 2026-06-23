@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import hashlib
 import requests
 from django.core.files.base import ContentFile
@@ -7,14 +8,13 @@ from django.db.models.signals import post_save
 from datetime import datetime
 
 
-# Termos proibidos no título ou URL da imagem (documentos, mapas, diagramas, logos, etc.)
 PHOTO_BLACKLIST = [
-    "logo", "emblem", "badge", "drawing", "diagram", "interior", "sign",
-    "document", "map", "mapa", "text", "page", "pdf", "chart", "graph",
-    "table", "scan", "record", "patent", "schematic", "blueprint", "brochure",
-    "poster", "advertisement", "ad", "catalogue", "catalog", "flyer",
-    "manual", "plan", "aerial", "satellite", "coat_of_arms", "flag",
-    "icon", "symbol", "stamp", "label",
+    "logo", "emblem", "badge", "drawing", "diagram", "interior",
+    "document", "mapa", "pdf", "chart", "graph",
+    "schematic", "blueprint", "brochure",
+    "advertisement", "catalogue", "catalog", "flyer",
+    "manual", "aerial", "satellite", "coat_of_arms",
+    "symbol", "stamp",
 ]
 
 
@@ -67,10 +67,16 @@ def get_existing_photo_hashes():
 
 
 def _url_is_blacklisted(url: str, title: str) -> bool:
-    """Verifica se a URL ou o título da imagem contém termos proibidos."""
-    url_lower = url.lower()
-    title_lower = title.lower()
-    return any(term in url_lower or term in title_lower for term in PHOTO_BLACKLIST)
+    """Verifica se a URL ou o título da imagem contém termos proibidos.
+    Usa word boundaries (\\b) para evitar falsos positivos como 'ad' em 'upload',
+    'sign' em 'design', 'plan' em 'explanation', etc.
+    """
+    combined = (url + " " + title).lower()
+    for term in PHOTO_BLACKLIST:
+        # \b garante que o termo é uma palavra completa, não substring
+        if re.search(r'\b' + re.escape(term) + r'\b', combined):
+            return True
+    return False
 
 
 def _try_save_photo_url(car, url, brand_name, model_name):
@@ -150,22 +156,24 @@ def _fetch_wikipedia_thumbnail(brand_name, model_name, year, headers):
                     thumb_url = thumb.get("source", "")
                     if thumb_url:
                         # Valida que não é logo, bandeira, etc.
-                        if not _url_is_blacklisted(thumb_url, article_title):
-                            # Valida aspect ratio com sample
-                            try:
-                                sample = requests.get(thumb_url, headers=headers, timeout=10, stream=True)
-                                if sample.status_code == 200:
-                                    img_content = b""
-                                    for chunk in sample.iter_content(chunk_size=8192):
-                                        img_content += chunk
-                                        if len(img_content) >= 204800:
-                                            break
-                                    sample.close()
-                                    if _is_valid_car_image(img_content):
-                                        print(f"   [Wikipedia-{wiki_lang}] Thumbnail encontrada para '{article_title}': {thumb_url}", flush=True)
-                                        return thumb_url
-                                    else:
-                                        print(f"   [Wikipedia-{wiki_lang}] Aspecto inválido rejeitado: {thumb_url}", flush=True)
+                        if _url_is_blacklisted(thumb_url, article_title):
+                            print(f"   [Wikipedia-{wiki_lang}] Blacklist rejeitou thumbnail de '{article_title}'", flush=True)
+                            continue
+                        # Valida aspect ratio com sample
+                        try:
+                            sample = requests.get(thumb_url, headers=headers, timeout=10, stream=True)
+                            if sample.status_code == 200:
+                                img_content = b""
+                                for chunk in sample.iter_content(chunk_size=8192):
+                                    img_content += chunk
+                                    if len(img_content) >= 204800:
+                                        break
+                                sample.close()
+                                if _is_valid_car_image(img_content):
+                                    print(f"   [Wikipedia-{wiki_lang}] Thumbnail encontrada para '{article_title}': {thumb_url}", flush=True)
+                                    return thumb_url
+                                else:
+                                    print(f"   [Wikipedia-{wiki_lang}] Aspecto inválido rejeitado: {thumb_url}", flush=True)
                             except Exception as e:
                                 print(f"   [Wikipedia-{wiki_lang}] Erro ao validar thumbnail: {e}", flush=True)
             except Exception as e:

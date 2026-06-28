@@ -326,22 +326,29 @@ def fetch_and_save_car_photo_with_hashes(car_id, existing_hashes):
 
     brand_name = car.brand.name
     model_name = car.model
+    
+    # Remove a marca do início do modelo, caso esteja duplicada
+    clean_model_name = model_name
+    if clean_model_name.lower().startswith(brand_name.lower()):
+        clean_model_name = clean_model_name[len(brand_name):].strip()
+
     year = car.model_year or car.factory_year or ""
     headers = {"User-Agent": "CarrosBot/1.0 (cmsampaio71@gmail.com)"}
 
     # --- Estratégia 1: Wikipedia pageimages ---
-    thumb_url = _fetch_wikipedia_thumbnail(brand_name, model_name, year, headers)
+    thumb_url = _fetch_wikipedia_thumbnail(brand_name, clean_model_name, year, headers)
     if thumb_url:
         _try_save_photo_url(car, thumb_url, brand_name, model_name)
         return
 
     # --- Estratégia 2: Wikimedia Commons search ---
-    commons_url = _fetch_commons_search(brand_name, model_name, year, headers)
+    commons_url = _fetch_commons_search(brand_name, clean_model_name, year, headers)
     if commons_url:
         _try_save_photo_url(car, commons_url, brand_name, model_name)
         return
 
     print(f"   [Sem Foto] Nenhuma imagem válida encontrada para {brand_name} {model_name}", flush=True)
+    _try_save_photo_url(car, "no_photo", brand_name, model_name)
 
 
 

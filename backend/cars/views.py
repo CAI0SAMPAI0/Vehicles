@@ -58,6 +58,8 @@ def _build_foto_url(car_or_img, settings):
     # 1. Prioriza photo_url (URL externa, persiste no banco)
     photo_url = getattr(car_or_img, 'photo_url', None)
     if photo_url:
+        if photo_url == 'no_photo':
+            return None
         return photo_url
 
     # 2. Fallback para photo (arquivo local — compatibilidade retroativa)
@@ -72,6 +74,55 @@ def _build_foto_url(car_or_img, settings):
     return f"{settings.MEDIA_URL}{photo_path}"
 
 
+import threading
+
+_seed_lock = threading.Lock()
+
+def _ensure_default_data():
+    from cars.models import Brand, Car
+    if Car.objects.exists():
+        return
+
+    with _seed_lock:
+        if Car.objects.exists():
+            return
+
+        print("[Seed] Iniciando seed offline de marcas e carros padrão...", flush=True)
+
+        default_brands = [
+            "Chevrolet", "Volkswagen", "Fiat", "Ford", "Dodge", "Honda", "Toyota", "Audi", "BMW", "Volvo"
+        ]
+        brand_map = {}
+        for b_name in default_brands:
+            brand, _ = Brand.objects.get_or_create(name=b_name)
+            brand_map[b_name] = brand
+
+        default_cars = [
+            {"brand": "Chevrolet", "model": "Opala Diplomata 4.1", "value": 80000.0, "factory_year": 1990, "model_year": 1990},
+            {"brand": "Volkswagen", "model": "Gol GTI 2.0", "value": 95000.0, "factory_year": 1994, "model_year": 1994},
+            {"brand": "Fiat", "model": "Uno Mille EP", "value": 15000.0, "factory_year": 1996, "model_year": 1996},
+            {"brand": "Ford", "model": "Maverick V8", "value": 160000.0, "factory_year": 1977, "model_year": 1977},
+            {"brand": "Dodge", "model": "Dart Luxo", "value": 130000.0, "factory_year": 1975, "model_year": 1975},
+            {"brand": "Honda", "model": "Civic VTi", "value": 70000.0, "factory_year": 1995, "model_year": 1995},
+            {"brand": "Toyota", "model": "Bandeirante", "value": 90000.0, "factory_year": 1998, "model_year": 1998},
+        ]
+
+        for c_data in default_cars:
+            brand = brand_map.get(c_data["brand"])
+            if brand:
+                Car.objects.get_or_create(
+                    model=c_data["model"],
+                    brand=brand,
+                    defaults={
+                        'value': c_data["value"],
+                        'factory_year': c_data["factory_year"],
+                        'model_year': c_data["model_year"],
+                    }
+                )
+
+        print("[Seed] Seed offline de marcas e carros concluído!", flush=True)
+
+
 def cars_api_list(request):
     search = request.GET.get('search', '')
     brand = request.GET.get('brand', '')
@@ -83,6 +134,11 @@ def cars_api_list(request):
         page = int(page)
     except ValueError:
         page = 1
+
+    # Se o banco estiver totalmente vazio (comum após reinicialização de contêineres efêmeros),
+    # executa o seed offline imediato para garantir que o sistema não inicialize sem dados.
+    if not Car.objects.exists():
+        _ensure_default_data()
 
     cache_key = f'cars_api_list_{search}_{brand}_{categoria}_{ordering}_{page}'
     cached_cars = cache.get(cache_key)
@@ -145,7 +201,10 @@ def cars_api_list(request):
         'has_next': end < total_count,
     }
 
-    cache.set(cache_key, response_data, 60 * 60 * 24)
+    # Apenas faz cache se existirem registros, evitando guardar um resultado vazio
+    # na memória caso ocorram problemas de inicialização
+    if total_count > 0:
+        cache.set(cache_key, response_data, 60 * 60 * 24)
     return JsonResponse(response_data)
 
 

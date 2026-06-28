@@ -92,7 +92,7 @@ def send_price_drop_alerts(car_id, old_price, new_price):
         print(f"[Alert] Erro na rotina de alertas de redução de preço: {e}", flush=True)
 
 
-# pre_save detecta redução de preço
+# pre_save detecta redução de preço e alterações de modelo/marca
 @receiver(pre_save, sender=Car)
 def car_pre_save(sender, instance, **kwargs):
     if instance.id:
@@ -102,6 +102,11 @@ def car_pre_save(sender, instance, **kwargs):
                 thread = threading.Thread(target=send_price_drop_alerts, args=(instance.id, old_car.value, instance.value))
                 thread.daemon = True
                 thread.start()
+            
+            # Se o modelo ou marca mudar, e anteriormente não havia foto encontrada,
+            # resetamos o campo photo_url para re-disparar a busca com os novos dados
+            if (old_car.model != instance.model or old_car.brand_id != instance.brand_id) and old_car.photo_url == 'no_photo':
+                instance.photo_url = ''
         except Car.DoesNotExist:
             pass
 

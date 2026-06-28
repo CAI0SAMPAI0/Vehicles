@@ -123,18 +123,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Erro ao carregar marcas:', err);
     }
 
-    // Tradução estática dos labels do formulário
-    const formLabels = document.querySelectorAll('#car-form label');
-    if (formLabels.length >= 8) {
-        formLabels[0].childNodes[0].textContent = t('label_model') + ' ';
-        formLabels[1].childNodes[0].textContent = t('label_brand') + ' ';
-        formLabels[2].childNodes[0].textContent = t('label_factory_year') + ' ';
-        formLabels[3].childNodes[0].textContent = t('label_model_year') + ' ';
-        formLabels[4].childNodes[0].textContent = t('label_plate') + ' ';
-        formLabels[5].childNodes[0].textContent = t('label_value') + ' ';
-        formLabels[6].childNodes[0].textContent = t('label_photo') + ' ';
-        formLabels[7].childNodes[0].textContent = t('label_desc') + ' ';
-    }
+    // Tradução estática dos labels do formulário baseada nos atributos 'for'
+    const labelModel = document.querySelector('label[for="model"]');
+    if (labelModel && labelModel.childNodes.length > 0) labelModel.childNodes[0].textContent = t('label_model') + ' ';
+
+    const labelBrand = document.querySelector('label[for="brand"]');
+    if (labelBrand && labelBrand.childNodes.length > 0) labelBrand.childNodes[0].textContent = t('label_brand') + ' ';
+
+    const labelCategory = document.querySelector('label[for="categoria"]');
+    if (labelCategory && labelCategory.childNodes.length > 0) labelCategory.childNodes[0].textContent = t('label_category') + ' ';
+
+    const labelFactoryYear = document.querySelector('label[for="factory_year"]');
+    if (labelFactoryYear && labelFactoryYear.childNodes.length > 0) labelFactoryYear.childNodes[0].textContent = t('label_factory_year') + ' ';
+
+    const labelModelYear = document.querySelector('label[for="model_year"]');
+    if (labelModelYear && labelModelYear.childNodes.length > 0) labelModelYear.childNodes[0].textContent = t('label_model_year') + ' ';
+
+    const labelPlate = document.querySelector('label[for="plate"]');
+    if (labelPlate && labelPlate.childNodes.length > 0) labelPlate.childNodes[0].textContent = t('label_plate') + ' ';
+
+    const labelValue = document.querySelector('label[for="value"]');
+    if (labelValue && labelValue.childNodes.length > 0) labelValue.childNodes[0].textContent = t('label_value') + ' ';
+
+    const labelPhoto = document.querySelector('label[for="photo"]');
+    if (labelPhoto && labelPhoto.childNodes.length > 0) labelPhoto.childNodes[0].textContent = t('label_photo') + ' ';
+
+    const labelBio = document.querySelector('label[for="bio"]');
+    if (labelBio && labelBio.childNodes.length > 0) labelBio.childNodes[0].textContent = t('label_desc') + ' ';
 
     const modelInput = document.getElementById('model') as HTMLInputElement | null;
     if (modelInput) modelInput.placeholder = t('placeholder_model');

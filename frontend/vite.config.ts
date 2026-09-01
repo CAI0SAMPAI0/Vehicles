@@ -3,6 +3,11 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
+  envPrefix: ['VITE_', 'NEXT_', 'NEXT_PUBLIC_'],
+  define: {
+    'process.env.NEXT_API_BASE_URL': JSON.stringify(process.env.NEXT_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || process.env.VITE_API_URL || ''),
+    'process.env.NEXT_PUBLIC_API_BASE_URL': JSON.stringify(process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_API_BASE_URL || process.env.VITE_API_URL || ''),
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {

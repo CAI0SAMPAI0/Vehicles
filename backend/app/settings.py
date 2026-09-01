@@ -81,6 +81,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_MANIFEST_STRICT = False
 # Inclui a pasta images/ como arquivos estáticos — servidos pelo WhiteNoise em produção
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'images'),
@@ -101,11 +102,16 @@ MEDIA_ROOT = BASE_DIR
 
 CSRF_TRUSTED_ORIGINS = [
     'https://autodrivecars.netlify.app',
+    'https://*.vercel.app',
+    'https://*.onrender.com',
+    'https://*.netlify.app',
+    'https://*.hf.space',
     'http://localhost:3000',
     'http://127.0.0.1:8000',
     'http://127.0.0.1:5173',
     'http://localhost:5173',
-    'https://carros-j99v.onrender.com/'
+    'http://localhost:4173',
+    'https://carros-j99v.onrender.com',
 ]
 
 space_id = os.getenv('SPACE_ID')

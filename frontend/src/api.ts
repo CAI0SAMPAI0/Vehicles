@@ -97,7 +97,10 @@ if (typeof document !== 'undefined') {
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('Service Worker registrado com sucesso! Escopo:', reg.scope))
+            .then(reg => {
+                reg.update();
+                console.log('Service Worker registrado com sucesso! Escopo:', reg.scope);
+            })
             .catch(err => console.error('Erro ao registrar o Service Worker:', err));
     });
 }

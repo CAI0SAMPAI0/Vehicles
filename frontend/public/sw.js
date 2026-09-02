@@ -29,8 +29,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignora chamadas de API e imagens do Cloudinary
-  if (event.request.url.includes('/api/v1/') || event.request.url.includes('cloudinary.com')) {
+  // Ignora requisições que não sejam GET, chamadas de API ou CDN externa
+  if (event.request.method !== 'GET' || event.request.url.includes('/api/') || event.request.url.includes('cloudinary.com')) {
     return;
   }
   event.respondWith(

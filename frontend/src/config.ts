@@ -14,7 +14,7 @@ const rawBaseUrl = (envApiUrl && envApiUrl.trim() !== '')
   ? envApiUrl.trim()
   : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
     ? 'http://127.0.0.1:8000'
-    : 'https://api.example.com'; // Substitua pelo URL da sua API de produção
+    : 'https://carros-j99v.onrender.com';
 
 // Remove barra final para evitar URLs duplicadas tipo //api/v1/
 export const API_BASE_URL: string = rawBaseUrl.replace(/\/+$/, '');

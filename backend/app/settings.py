@@ -158,6 +158,9 @@ if redis_url:
             "LOCATION": redis_url,
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "IGNORE_EXCEPTIONS": True,
+                "SOCKET_CONNECT_TIMEOUT": 2,
+                "SOCKET_TIMEOUT": 2,
                 "CONNECTION_POOL_KWARGS": {
                     "protocol": 2,
                 },

@@ -141,9 +141,12 @@ def cars_api_list(request):
         _ensure_default_data()
 
     cache_key = f'cars_api_list_{search}_{brand}_{categoria}_{ordering}_{page}'
-    cached_cars = cache.get(cache_key)
-    if cached_cars:
-        return JsonResponse(cached_cars)
+    try:
+        cached_cars = cache.get(cache_key)
+        if cached_cars:
+            return JsonResponse(cached_cars)
+    except Exception as e:
+        print(f"[Cache Warning] Falha ao ler cache: {e}", flush=True)
 
     cars = Car.objects.select_related('brand').all()
     
@@ -201,10 +204,11 @@ def cars_api_list(request):
         'has_next': end < total_count,
     }
 
-    # Apenas faz cache se existirem registros, evitando guardar um resultado vazio
-    # na memória caso ocorram problemas de inicialização
     if total_count > 0:
-        cache.set(cache_key, response_data, 60 * 60 * 24)
+        try:
+            cache.set(cache_key, response_data, 60 * 60 * 24)
+        except Exception as e:
+            print(f"[Cache Warning] Falha ao salvar cache: {e}", flush=True)
     return JsonResponse(response_data)
 
 
